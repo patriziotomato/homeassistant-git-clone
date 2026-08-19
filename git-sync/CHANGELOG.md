@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.1
+
+- Fix: "Jetzt übernehmen" (and background auto-pull) failed right after
+  coupling, before the first commit was pushed — the sync branch does not
+  exist on GitHub yet and the fetch aborted. A missing remote sync branch
+  is now tolerated.
+- Git and GitHub errors now land in the app log with their real cause, so
+  "Details im App-Protokoll" actually delivers details.
+
 ## 0.4.0
 
 - Settings view in the panel: auto-pull and poll interval, auto-commit and

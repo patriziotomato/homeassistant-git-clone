@@ -9,6 +9,7 @@ it for local development.
 """
 
 import asyncio
+import logging
 import os
 import subprocess
 from contextlib import asynccontextmanager
@@ -24,6 +25,9 @@ import sync
 
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/homeassistant")
 STATIC_DIR = Path(__file__).parent / "static"
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+LOG = logging.getLogger("git-sync")
 
 
 @asynccontextmanager
@@ -62,6 +66,7 @@ PROFILES = {
 
 
 def _github_error(err: gh.GitHubError) -> HTTPException:
+    LOG.warning("GitHub-Fehler (%s): %s", err.kind, err.detail or "-")
     status = {"invalid_token": 401, "forbidden": 403, "network": 502}.get(err.kind, 502)
     return HTTPException(status_code=status, detail=err.kind)
 
@@ -160,6 +165,7 @@ def set_profile(payload: dict = Body(...)) -> dict:
 # ------------------------------------------------------------------ sync
 
 def _git_error(err: git_ops.GitError) -> HTTPException:
+    LOG.warning("Git-Fehler (%s): %s", err.kind, err.detail or "-")
     status = {"remote_mismatch": 409, "dirty": 409, "config_missing": 500}.get(err.kind, 500)
     return HTTPException(status_code=status, detail=err.kind)
 

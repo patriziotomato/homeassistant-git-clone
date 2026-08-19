@@ -260,8 +260,10 @@ def commit_and_push(token: str, repo_cfg: dict, message: str, profile: dict) -> 
 
 def fetch(token: str, repo_cfg: dict) -> None:
     with LOCK:
-        _must("fetch", "origin", repo_cfg["main_branch"], repo_cfg["sync_branch"],
-              token=token, timeout=300)
+        _must("fetch", "origin", repo_cfg["main_branch"], token=token, timeout=300)
+        # The sync branch only exists on the remote after the first push —
+        # a missing ref must not fail the whole fetch.
+        _git("fetch", "origin", repo_cfg["sync_branch"], token=token, timeout=300)
 
 
 def incoming_count(repo_cfg: dict) -> int:
