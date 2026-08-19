@@ -25,7 +25,8 @@
     background: #fff; border: 1px solid #e0e0e0; border-radius: 12px;
     padding: 20px; display: flex; flex-direction: column; gap: 14px;
   }
-  .card h2 { font-size: 16px; font-weight: 500; margin: 0; }
+  .card h2 { font-size: 18px; font-weight: 400; margin: 0; }
+  .card h3 { font-size: 14px; font-weight: 500; margin: 0; }
   .row { display: flex; align-items: center; gap: 10px; }
   .grow { flex-grow: 1; }
   .chip {
@@ -35,8 +36,25 @@
   }
   .chip.ok { background: #e8f5e9; color: #2e7d32; }
   .chip.warn { background: #fff3e0; color: #ef6c00; }
+  .chip.exp { background: #f3e5f5; color: #6a1b9a; font-size: 10px; letter-spacing: 0.4px; }
   .mono { font-family: 'Roboto Mono', ui-monospace, monospace; }
-  .meta { font-size: 13px; color: #727272; }
+  .meta { font-size: 13px; color: #727272; line-height: 1.5; }
+  .label { font-size: 13px; font-weight: 500; color: #727272; }
+  input[type=text], input[type=password], select {
+    width: 100%; height: 44px; padding: 0 14px;
+    border: 1px solid #bdbdbd; border-radius: 4px;
+    font-size: 14px; font-family: inherit; background: #fff; color: #212121;
+  }
+  input:focus, select:focus { outline: none; border-color: #03a9f4; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 40px; padding: 0 20px; border: none; border-radius: 4px;
+    background: #03a9f4; color: #fff; font-size: 14px; font-weight: 500;
+    letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; font-family: inherit;
+  }
+  .btn:disabled { background: #e0e0e0; color: #9e9e9e; cursor: default; }
+  .btn.text { background: transparent; color: #03a9f4; }
+  .btn.text.danger { color: #c62828; }
   .file { display: flex; align-items: center; gap: 12px; font-size: 13px; }
   .badge {
     display: inline-flex; align-items: center; justify-content: center;
@@ -49,90 +67,469 @@
     font-size: 12px; color: #727272; background: #fafafa;
     border-radius: 6px; padding: 10px 12px; line-height: 1.5;
   }
+  .info {
+    display: flex; flex-direction: column; gap: 6px;
+    background: #e1f5fe; border: 1px solid #b3e5fc; border-radius: 8px;
+    padding: 14px 16px; font-size: 13px; color: #01579b; line-height: 1.6;
+  }
+  .shield {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px;
+    padding: 12px 14px; font-size: 13px; color: #1b5e20; line-height: 1.5;
+  }
+  .error { font-size: 13px; color: #c62828; }
   .divider { height: 1px; background: #eeeeee; }
   .empty { font-size: 14px; color: #727272; }
+  .stepper { display: flex; align-items: flex-start; justify-content: center; padding: 8px 0; }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 130px; }
+  .step .dot {
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #e0e0e0; color: #757575; font-size: 14px; font-weight: 500;
+  }
+  .step.active .dot, .step.done .dot { background: #03a9f4; color: #fff; }
+  .step .name { font-size: 13px; color: #9e9e9e; }
+  .step.active .name { color: #212121; font-weight: 500; }
+  .stepline { width: 70px; height: 2px; background: #e0e0e0; margin-top: 13px; }
+  .stepline.done { background: #03a9f4; }
+  .profiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .profile {
+    display: flex; flex-direction: column; gap: 6px;
+    border: 1px solid #e0e0e0; border-radius: 12px; padding: 14px; cursor: pointer;
+    background: #fff;
+  }
+  .profile.selected { border: 2px solid #03a9f4; background: #e1f5fe; padding: 13px; }
+  .profile .pname { font-size: 14px; font-weight: 500; }
+  .profile .pdesc { font-size: 12px; color: #727272; line-height: 1.45; }
+  .group { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eeeeee; }
+  .group:last-child { border-bottom: none; }
+  .group .gname { font-size: 14px; font-weight: 500; }
+  .group .gfiles { font-size: 12px; color: #9e9e9e; }
+  .seg { display: flex; border: 1px solid #bdbdbd; border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+  .seg button {
+    border: none; background: #fff; color: #757575; padding: 6px 12px;
+    font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit;
+  }
+  .seg button.on { background: #e1f5fe; color: #0277bd; }
+  .seg button + button { border-left: 1px solid #bdbdbd; }
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
   <div class="topbar">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#03a9f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"></path><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
     <h1>Git Sync</h1>
-    <span class="chip">Vorschau · Meilenstein 1</span>
+    <span id="userchip" class="chip hidden"></span>
   </div>
   <main>
-    <div class="card">
+    <div id="stepper" class="stepper hidden">
+      <div class="step" id="s1"><div class="dot">1</div><div class="name">GitHub verbinden</div></div>
+      <div class="stepline" id="l1"></div>
+      <div class="step" id="s2"><div class="dot">2</div><div class="name">Repository</div></div>
+      <div class="stepline" id="l2"></div>
+      <div class="step" id="s3"><div class="dot">3</div><div class="name">Profil</div></div>
+    </div>
+
+    <!-- Schritt 1: GitHub verbinden -->
+    <div id="view1" class="card hidden">
+      <h2>Mit GitHub verbinden</h2>
+      <div class="meta">Git Sync koppelt deine Home-Assistant-Konfiguration an ein GitHub-Repository. Erstelle einen <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Personal Access Token</a> (klassisch mit <span class="mono">repo</span>-Scope, oder fine-grained mit Contents- und Pull-Request-Schreibrechten) und füge ihn hier ein.</div>
+      <div>
+        <div class="label" style="margin-bottom:6px">Personal Access Token</div>
+        <input type="password" id="token" placeholder="ghp_… / github_pat_…" autocomplete="off">
+      </div>
+      <div id="err1" class="error hidden"></div>
       <div class="row">
-        <h2 class="grow">Repository-Status</h2>
-        <span id="branch" class="chip mono" hidden></span>
+        <span class="grow"></span>
+        <button class="btn" id="connect">Verbinden</button>
       </div>
-      <div id="status" class="empty">Lade Status …</div>
-      <div id="details" hidden>
-        <div class="meta" id="remote"></div>
-        <div class="meta" id="lastcommit"></div>
-        <div class="meta" id="tracking"></div>
+      <div class="shield">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6l8-3z"></path><path d="M9 12l2 2 4-4"></path></svg>
+        <span><strong>Schutz aktiv:</strong> <span class="mono">secrets.yaml</span>, <span class="mono">.storage/</span> (Zugangsdaten &amp; Token) und Datenbanken werden niemals übertragen. Der Token bleibt lokal in dieser App gespeichert.</span>
       </div>
-      <div class="divider"></div>
-      <div class="row"><h2 class="grow" style="font-size:14px">Lokale Änderungen</h2><span id="changecount" class="chip" hidden></span></div>
-      <div id="changes" class="empty">–</div>
-      <div class="hint">Dieser Meilenstein zeigt den Git-Zustand deiner Konfiguration nur an. Als Nächstes folgen: GitHub-Verbindung, Profile und der Sammel-PR-Workflow — main bleibt dabei die Quelle der Wahrheit, verändert nur durch den manuellen Merge des Sync-PRs.</div>
+    </div>
+
+    <!-- Schritt 2: Repository & Branch -->
+    <div id="view2" class="card hidden">
+      <h2>Repository &amp; Branch</h2>
+      <div>
+        <div class="label" style="margin-bottom:6px">Repository</div>
+        <select id="repo"></select>
+        <div class="row" style="margin-top:8px">
+          <span class="meta">oder</span>
+          <input type="text" id="newrepo" placeholder="Name für neues privates Repo" style="width:260px;height:36px">
+          <button class="btn text" id="createrepo">Anlegen</button>
+        </div>
+      </div>
+      <div class="row" style="align-items:flex-start">
+        <div class="grow">
+          <div class="label" style="margin-bottom:6px">Main-Branch (Quelle der Wahrheit)</div>
+          <select id="mainbranch"></select>
+          <div class="meta" style="margin-top:4px">Wird automatisch auf deine Instanz übernommen.</div>
+        </div>
+        <div class="grow">
+          <div class="label" style="margin-bottom:6px">Sync-Branch</div>
+          <input type="text" id="syncbranch" value="ha-sync">
+          <div class="meta" style="margin-top:4px">Hier sammelt Git Sync deine lokalen Änderungen.</div>
+        </div>
+      </div>
+      <div class="info">
+        <strong>So arbeitet Git Sync</strong>
+        <span>Änderungen auf dem Main-Branch werden automatisch übernommen. Lokale Änderungen sammeln sich als Commits in <strong>einem offenen Pull Request</strong> auf dem Sync-Branch. Nur wenn du diesen PR mergst — hier oder auf GitHub — verändert sich der Main-Branch.</span>
+      </div>
+      <div id="err2" class="error hidden"></div>
+      <div class="row">
+        <button class="btn text" id="back2">Zurück</button>
+        <span class="grow"></span>
+        <button class="btn" id="next2">Weiter</button>
+      </div>
+    </div>
+
+    <!-- Schritt 3: Profil -->
+    <div id="view3" class="card hidden">
+      <h2>Profil wählen</h2>
+      <div class="meta">Ein Profil bestimmt, welche Dateigruppen ins Repository wandern.</div>
+      <div class="profiles" id="profiles"></div>
+      <div id="groups"></div>
+      <div class="hint">Immer ausgeschlossen und nicht abwählbar: <span class="mono">secrets.yaml · .storage/ (Rohdaten) · *.db · Logs &amp; Caches</span></div>
+      <div id="err3" class="error hidden"></div>
+      <div class="row">
+        <button class="btn text" id="back3">Zurück</button>
+        <span class="grow"></span>
+        <button class="btn" id="finish">Einrichtung abschließen</button>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="viewdash" class="hidden" style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="row">
+          <h3 class="grow" style="font-size:16px">Repository-Status</h3>
+          <span id="branch" class="chip mono hidden"></span>
+        </div>
+        <div id="status" class="empty">Lade Status …</div>
+        <div id="details" class="hidden">
+          <div class="meta" id="remote"></div>
+          <div class="meta" id="lastcommit"></div>
+          <div class="meta" id="tracking"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="row"><h3 class="grow">Lokale Änderungen</h3><span id="changecount" class="chip hidden"></span></div>
+        <div id="changes" class="empty">–</div>
+      </div>
+      <div class="card">
+        <div class="row"><h3 class="grow" style="font-size:16px">Einrichtung</h3></div>
+        <div class="meta" id="sumrepo"></div>
+        <div class="meta" id="sumbranches"></div>
+        <div class="meta" id="sumprofile"></div>
+        <div class="hint">Als Nächstes: Auto-Commit in den Sammel-PR, Auto-Pull vom Main-Branch, Merge aus dieser Ansicht und Konflikt-Hinweise mit GitHub-Link.</div>
+        <div class="row">
+          <span class="grow"></span>
+          <button class="btn text danger" id="disconnect">Verbindung trennen</button>
+        </div>
+      </div>
     </div>
   </main>
 <script>
-  async function load() {
-    const statusEl = document.getElementById('status');
-    try {
-      const res = await fetch('api/status');
-      const s = await res.json();
+(function () {
+  'use strict';
+
+  var GROUPS = [
+    { key: 'core', name: 'Kern-Konfiguration', files: 'configuration.yaml · automations.yaml · scripts.yaml · scenes.yaml' },
+    { key: 'blueprints', name: 'Blueprints & Dashboards (YAML)', files: 'blueprints/ · dashboards/' },
+    { key: 'esphome', name: 'ESPHome', files: 'esphome/ — ohne esphome/secrets.yaml' },
+    { key: 'themes_www', name: 'Themes & Web-Assets', files: 'themes/ · www/' },
+    { key: 'apps', name: 'Anwendungen', files: 'custom_components/', seg: true },
+    { key: 'ui_export', name: 'UI-verwaltete Einstellungen', files: 'Bereinigter Export ausgewählter .storage-Inhalte', exp: true }
+  ];
+  var PROFILES = [
+    { key: 'komplett', name: 'Komplett', desc: 'Alle Dateigruppen inklusive vollständigem Anwendungs-Code.' },
+    { key: 'ohne_anwendungen', name: 'Ohne Anwendungen', desc: 'Konfiguration ja — Anwendungen nur als Versions-Lockfile.', recommended: true },
+    { key: 'nur_kern', name: 'Nur Kern-Konfiguration', desc: 'Nur die zentralen YAML-Dateien.' },
+    { key: 'benutzerdefiniert', name: 'Benutzerdefiniert', desc: 'Dateigruppen frei zusammenstellen.' }
+  ];
+  var PRESETS = {
+    komplett: { groups: { core: true, blueprints: true, esphome: true, themes_www: true, apps: true, ui_export: false }, apps_mode: 'full' },
+    ohne_anwendungen: { groups: { core: true, blueprints: true, esphome: true, themes_www: true, apps: true, ui_export: false }, apps_mode: 'lockfile' },
+    nur_kern: { groups: { core: true, blueprints: false, esphome: false, themes_www: false, apps: false, ui_export: false }, apps_mode: 'lockfile' }
+  };
+  var ERRORS = {
+    invalid_token: 'Der Token wurde von GitHub nicht akzeptiert. Bitte prüfe Wert und Berechtigungen.',
+    forbidden: 'GitHub hat den Zugriff verweigert — fehlen dem Token Berechtigungen?',
+    network: 'GitHub ist gerade nicht erreichbar. Bitte später erneut versuchen.',
+    branches_equal: 'Main- und Sync-Branch müssen unterschiedlich sein.',
+    invalid_repo: 'Bitte ein Repository auswählen.',
+    missing_name: 'Bitte einen Repo-Namen angeben.',
+    missing_token: 'Bitte einen Token eingeben.'
+  };
+
+  var el = function (id) { return document.getElementById(id); };
+  var state = { profile: 'ohne_anwendungen', groups: {}, apps_mode: 'lockfile' };
+
+  function api(method, path, body) {
+    return fetch(path, {
+      method: method,
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function (res) {
+      if (res.ok) return res.json();
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        var err = new Error(data.detail || 'error');
+        err.code = data.detail;
+        throw err;
+      });
+    });
+  }
+
+  function showError(id, err) {
+    var box = el(id);
+    box.textContent = ERRORS[err.code] || ('Fehler: ' + (err.code || err.message));
+    box.classList.remove('hidden');
+  }
+
+  function show(step, login) {
+    ['view1', 'view2', 'view3', 'viewdash'].forEach(function (id) { el(id).classList.add('hidden'); });
+    el('stepper').classList.toggle('hidden', step === 0);
+    el('userchip').classList.toggle('hidden', !login);
+    if (login) { el('userchip').textContent = login; el('userchip').classList.add('ok'); }
+    [1, 2, 3].forEach(function (n) {
+      var node = el('s' + n);
+      node.classList.remove('active', 'done');
+      if (n < step) { node.classList.add('done'); node.querySelector('.dot').textContent = '✓'; }
+      else { node.querySelector('.dot').textContent = n; if (n === step) node.classList.add('active'); }
+    });
+    el('l1').classList.toggle('done', step > 1);
+    el('l2').classList.toggle('done', step > 2);
+    el(step === 0 ? 'viewdash' : 'view' + step).classList.remove('hidden');
+  }
+
+  function boot() {
+    api('GET', 'api/setup').then(function (setup) {
+      var login = setup.github && setup.github.login;
+      show(setup.step, login);
+      if (setup.step === 2) loadRepos();
+      if (setup.step === 3) renderProfiles();
+      if (setup.step === 0) { renderSummary(setup); loadStatus(); }
+    });
+  }
+
+  // ---- Schritt 1
+  el('connect').addEventListener('click', function () {
+    el('err1').classList.add('hidden');
+    el('connect').disabled = true;
+    api('POST', 'api/setup/token', { token: el('token').value })
+      .then(function () { el('token').value = ''; boot(); })
+      .catch(function (err) { showError('err1', err); })
+      .finally(function () { el('connect').disabled = false; });
+  });
+
+  // ---- Schritt 2
+  function loadRepos(preselect) {
+    api('GET', 'api/github/repos').then(function (repos) {
+      var select = el('repo');
+      select.innerHTML = '';
+      repos.forEach(function (repo) {
+        var opt = document.createElement('option');
+        opt.value = repo.full_name;
+        opt.textContent = repo.full_name + (repo.private ? ' (privat)' : '');
+        opt.dataset.def = repo.default_branch;
+        select.appendChild(opt);
+      });
+      if (preselect) select.value = preselect;
+      loadBranches();
+    }).catch(function (err) { showError('err2', err); });
+  }
+  function loadBranches() {
+    var select = el('repo');
+    var opt = select.selectedOptions[0];
+    if (!opt) return;
+    api('GET', 'api/github/branches?repo=' + encodeURIComponent(select.value)).then(function (branches) {
+      var mb = el('mainbranch');
+      mb.innerHTML = '';
+      branches.forEach(function (name) {
+        var o = document.createElement('option');
+        o.value = o.textContent = name;
+        mb.appendChild(o);
+      });
+      mb.value = branches.indexOf(opt.dataset.def) >= 0 ? opt.dataset.def : branches[0];
+    }).catch(function (err) { showError('err2', err); });
+  }
+  el('repo').addEventListener('change', loadBranches);
+  el('createrepo').addEventListener('click', function () {
+    el('err2').classList.add('hidden');
+    api('POST', 'api/github/repos', { name: el('newrepo').value })
+      .then(function (repo) { el('newrepo').value = ''; loadRepos(repo.full_name); })
+      .catch(function (err) { showError('err2', err); });
+  });
+  el('next2').addEventListener('click', function () {
+    el('err2').classList.add('hidden');
+    api('POST', 'api/setup/repo', {
+      full_name: el('repo').value,
+      main_branch: el('mainbranch').value,
+      sync_branch: el('syncbranch').value
+    }).then(boot).catch(function (err) { showError('err2', err); });
+  });
+  el('back2').addEventListener('click', function () {
+    api('DELETE', 'api/setup/token').then(boot);
+  });
+
+  // ---- Schritt 3
+  function renderProfiles() {
+    var wrap = el('profiles');
+    wrap.innerHTML = '';
+    PROFILES.forEach(function (profile) {
+      var card = document.createElement('div');
+      card.className = 'profile' + (state.profile === profile.key ? ' selected' : '');
+      var name = document.createElement('div');
+      name.className = 'pname';
+      name.textContent = profile.name;
+      var desc = document.createElement('div');
+      desc.className = 'pdesc';
+      desc.textContent = profile.desc;
+      card.appendChild(name);
+      card.appendChild(desc);
+      if (profile.recommended) {
+        var rec = document.createElement('span');
+        rec.className = 'chip ok';
+        rec.style.alignSelf = 'flex-start';
+        rec.textContent = 'Empfohlen';
+        card.appendChild(rec);
+      }
+      card.addEventListener('click', function () {
+        state.profile = profile.key;
+        if (PRESETS[profile.key]) {
+          state.groups = Object.assign({}, PRESETS[profile.key].groups);
+          state.apps_mode = PRESETS[profile.key].apps_mode;
+        }
+        renderProfiles();
+      });
+      wrap.appendChild(card);
+    });
+    if (PRESETS[state.profile] && !Object.keys(state.groups).length) {
+      state.groups = Object.assign({}, PRESETS[state.profile].groups);
+      state.apps_mode = PRESETS[state.profile].apps_mode;
+    }
+    renderGroups();
+  }
+  function renderGroups() {
+    var custom = state.profile === 'benutzerdefiniert';
+    var wrap = el('groups');
+    wrap.innerHTML = '';
+    GROUPS.forEach(function (group) {
+      var row = document.createElement('div');
+      row.className = 'group';
+      var check = document.createElement('input');
+      check.type = 'checkbox';
+      check.checked = !!state.groups[group.key];
+      check.disabled = !custom;
+      check.addEventListener('change', function () { state.groups[group.key] = check.checked; });
+      var text = document.createElement('div');
+      text.className = 'grow';
+      var name = document.createElement('div');
+      name.className = 'gname';
+      name.textContent = group.name;
+      if (group.exp) {
+        var chip = document.createElement('span');
+        chip.className = 'chip exp';
+        chip.textContent = 'EXPERIMENTELL';
+        chip.style.marginLeft = '8px';
+        name.appendChild(chip);
+      }
+      var files = document.createElement('div');
+      files.className = 'gfiles mono';
+      files.textContent = group.files;
+      text.appendChild(name);
+      text.appendChild(files);
+      row.appendChild(check);
+      row.appendChild(text);
+      if (group.seg) {
+        var seg = document.createElement('div');
+        seg.className = 'seg';
+        [['lockfile', 'Nur Lockfile'], ['full', 'Vollständig']].forEach(function (mode) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = mode[1];
+          btn.className = state.apps_mode === mode[0] ? 'on' : '';
+          btn.disabled = !custom;
+          btn.addEventListener('click', function () { state.apps_mode = mode[0]; renderGroups(); });
+          seg.appendChild(btn);
+        });
+        row.appendChild(seg);
+      }
+      wrap.appendChild(row);
+    });
+  }
+  el('finish').addEventListener('click', function () {
+    el('err3').classList.add('hidden');
+    api('POST', 'api/setup/profile', { name: state.profile, groups: state.groups, apps_mode: state.apps_mode })
+      .then(boot).catch(function (err) { showError('err3', err); });
+  });
+  el('back3').addEventListener('click', function () {
+    show(2);
+    loadRepos();
+  });
+
+  // ---- Dashboard
+  function renderSummary(setup) {
+    el('sumrepo').textContent = 'Repository: ' + setup.repo.full_name;
+    el('sumbranches').textContent = 'Main-Branch: ' + setup.repo.main_branch + ' (Quelle der Wahrheit) · Sync-Branch: ' + setup.repo.sync_branch;
+    var profile = PROFILES.filter(function (p) { return p.key === setup.profile.name; })[0];
+    el('sumprofile').textContent = 'Profil: ' + (profile ? profile.name : setup.profile.name) +
+      (setup.profile.apps_mode === 'lockfile' ? ' · Anwendungen als Lockfile' : '');
+  }
+  el('disconnect').addEventListener('click', function () {
+    if (window.confirm('Verbindung zu GitHub trennen? Repo- und Profil-Einstellungen werden zurückgesetzt.')) {
+      api('DELETE', 'api/setup/token').then(boot);
+    }
+  });
+
+  function loadStatus() {
+    api('GET', 'api/status').then(function (s) {
+      var statusEl = el('status');
       if (!s.exists) { statusEl.textContent = 'Konfigurationsverzeichnis nicht gefunden: ' + s.config_dir; return; }
-      if (!s.is_repo) { statusEl.textContent = 'Die Konfiguration (' + s.config_dir + ') ist noch kein Git-Repository. Die Einrichtung folgt im nächsten Meilenstein.'; return; }
-
-      statusEl.textContent = '';
-      statusEl.hidden = true;
-      const branch = document.getElementById('branch');
+      if (!s.is_repo) { statusEl.textContent = 'Die Konfiguration (' + s.config_dir + ') ist noch kein Git-Repository. Die Kopplung folgt im nächsten Meilenstein.'; return; }
+      statusEl.classList.add('hidden');
+      var branch = el('branch');
       branch.textContent = s.branch || '?';
-      branch.hidden = false;
+      branch.classList.remove('hidden');
       branch.classList.add('ok');
-
-      const details = document.getElementById('details');
-      details.hidden = false;
-      document.getElementById('remote').textContent = s.remote ? 'Remote: ' + s.remote : 'Kein Remote konfiguriert';
+      el('details').classList.remove('hidden');
+      el('remote').textContent = s.remote ? 'Remote: ' + s.remote : 'Kein Remote konfiguriert';
       if (s.last_commit) {
-        document.getElementById('lastcommit').textContent =
-          'Letzter Commit: ' + s.last_commit.hash + ' — ' + s.last_commit.subject + ' (' + s.last_commit.when + ')';
+        el('lastcommit').textContent = 'Letzter Commit: ' + s.last_commit.hash + ' — ' + s.last_commit.subject + ' (' + s.last_commit.when + ')';
       }
       if (s.ahead !== null && s.ahead !== undefined) {
-        document.getElementById('tracking').textContent = s.ahead + ' Commit(s) voraus · ' + s.behind + ' hinterher gegenüber Upstream';
+        el('tracking').textContent = s.ahead + ' Commit(s) voraus · ' + s.behind + ' hinterher gegenüber Upstream';
       }
-
-      const list = document.getElementById('changes');
-      const count = document.getElementById('changecount');
+      var list = el('changes');
+      var count = el('changecount');
       if (!s.changes.length) {
         list.textContent = 'Keine lokalen Änderungen — alles committed.';
       } else {
-        count.hidden = false;
+        count.classList.remove('hidden');
         count.classList.add('warn');
         count.textContent = s.changes.length + ' Datei(en)';
         list.classList.remove('empty');
         list.innerHTML = '';
-        for (const c of s.changes) {
-          const row = document.createElement('div');
+        s.changes.forEach(function (c) {
+          var row = document.createElement('div');
           row.className = 'file';
-          const badge = document.createElement('span');
+          var badge = document.createElement('span');
           badge.className = 'badge' + (c.state === 'A' || c.state === '??' ? ' add' : '');
           badge.textContent = c.state === '??' ? 'N' : c.state;
-          const path = document.createElement('span');
+          var path = document.createElement('span');
           path.className = 'mono';
           path.textContent = c.path;
           row.appendChild(badge);
           row.appendChild(path);
           list.appendChild(row);
-        }
+        });
       }
-    } catch (err) {
-      statusEl.textContent = 'Status konnte nicht geladen werden: ' + err;
-    }
+    }).catch(function (err) { el('status').textContent = 'Status konnte nicht geladen werden: ' + err; });
   }
-  load();
+
+  boot();
+})();
 </script>
 </body>
 </html>
