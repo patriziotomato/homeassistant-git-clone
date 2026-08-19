@@ -24,10 +24,12 @@ DEFAULT_SETTINGS = {
     "notify_conflict": True,
     "notify_pr_waiting": True,
     "pr_waiting_hours": 24,
+    "notify_restart": True,
 }
 
 NOTIFY_CONFLICT_ID = "git_sync_conflict"
 NOTIFY_PR_ID = "git_sync_pr_waiting"
+NOTIFY_RESTART_ID = "git_sync_restart"
 
 PR_TITLE = "Sync: Lokale Änderungen aus Home Assistant"
 PR_BODY = (
@@ -152,15 +154,69 @@ def _check_pr_reminder(token: str, repo: dict, settings: dict) -> None:
         )
 
 
+def _after_apply(settings: dict) -> None:
+    """Remote changes just landed in /config: run `ha core check` and flag
+    that a core restart is pending — the restart itself is always a manual,
+    user-confirmed action."""
+    ok, message = ha.core_check()
+    result = "ok" if ok else ("unavailable" if ok is None else "error")
+    store.update(core={
+        "restart_pending": True,
+        "check": {"result": result, "message": message, "at": int(time.time())},
+    })
+    if not settings.get("notify_restart"):
+        return
+    if ok:
+        ha.notify(
+            NOTIFY_RESTART_ID,
+            "Git Sync: Neustart empfohlen",
+            "Änderungen aus main wurden übernommen und die Konfigurations"
+            "prüfung war erfolgreich. Starte Home Assistant über das "
+            "Git-Sync-Panel neu, um sie zu aktivieren.",
+        )
+    elif ok is False:
+        ha.notify(
+            NOTIFY_RESTART_ID,
+            "Git Sync: Konfigurationsprüfung fehlgeschlagen",
+            "Änderungen aus main wurden übernommen, aber `ha core check` "
+            f"meldet einen Fehler: {message or 'siehe Panel'}. "
+            "Bitte vor einem Neustart korrigieren.",
+        )
+
+
+def check_core() -> dict:
+    """Re-run the configuration check without touching the pending flag."""
+    ok, message = ha.core_check()
+    state = store.load().get("core", {})
+    state["check"] = {
+        "result": "ok" if ok else ("unavailable" if ok is None else "error"),
+        "message": message,
+        "at": int(time.time()),
+    }
+    store.update(core=state)
+    return state
+
+
+def restart_core() -> dict:
+    if not ha.core_restart():
+        return {"ok": False}
+    store.update(core={"restart_pending": False, "check": None})
+    ha.dismiss(NOTIFY_RESTART_ID)
+    return {"ok": True}
+
+
 def pull_now() -> dict:
     """Fetch and integrate origin/sync + origin/main into the local branch."""
     token, repo, _, settings = _ctx()
     git_ops.fetch(token, repo)
     if git_ops.local_changes():
         commit_now(None)  # commit-first keeps merges clean
+    before = git_ops.head_sha()
     result = git_ops.integrate(token, repo)
     if result == "ok":
         store.update(last_pull=int(time.time()))
+        if git_ops.head_sha() != before:
+            _after_apply(settings)
     _notify_conflict(result == "conflict", settings)
     return {"result": result}
 
@@ -180,10 +236,15 @@ def merge_now() -> dict:
     if not outcome.get("merged"):
         return {"merged": False, "error": "merge_failed", "pr": detail}
     gh.delete_branch(token, repo["full_name"], repo["sync_branch"])
+    tree_before = git_ops.tree_hash()
     git_ops.realign_after_merge(token, repo)
     store.update(last_pull=int(time.time()), notify_state={"conflict": False, "pr_reminded": None})
     ha.dismiss(NOTIFY_CONFLICT_ID)
     ha.dismiss(NOTIFY_PR_ID)
+    # Content only changes here when the merge brought more than our own
+    # commits (e.g. a conflict resolved on GitHub) — then check + restart.
+    if git_ops.tree_hash() != tree_before:
+        _after_apply(settings)
     return {"merged": True, "pr": detail}
 
 
@@ -214,6 +275,7 @@ def full_status() -> dict:
         incoming=git_ops.incoming_commits(repo),
         incoming_count=git_ops.incoming_count(repo),
         outgoing=git_ops.outgoing_commits(repo),
+        core=state.get("core"),
         auto_commit_at=(
             int(_first_dirty_at + settings["auto_commit_delay"])
             if _first_dirty_at and settings["auto_commit"] and changes
@@ -255,9 +317,12 @@ async def poller():
                     behind = git_ops.incoming_count(repo)
                     dirty = bool(await asyncio.to_thread(git_ops.local_changes))
                     if behind and not dirty:
+                        before = git_ops.head_sha()
                         result = await asyncio.to_thread(git_ops.integrate, token, repo)
                         if result == "ok":
                             store.update(last_pull=int(time.time()))
+                            if git_ops.head_sha() != before:
+                                await asyncio.to_thread(_after_apply, settings)
                         _notify_conflict(result == "conflict", settings)
                 # PR-Warte-Erinnerung: höchstens alle 5 Minuten, und nur wenn
                 # etwas zum Mergen bereitliegt oder eine Erinnerung aussteht.
