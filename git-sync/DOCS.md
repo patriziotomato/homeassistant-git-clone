@@ -16,11 +16,21 @@ Couples your Home Assistant configuration to a GitHub repository.
 
 ## Current state
 
-This is an early preview (milestone 2): the panel walks you through the
-setup — GitHub token, repository & branches, sync profile — and shows the
-git status of your configuration directory. The actual sync engine
-(auto-commit, the accumulating pull request, auto-pull) is under active
-development.
+This is an early preview (milestone 3): setup wizard plus the working sync
+engine — coupling the configuration directory, auto-committing local edits
+onto the sync branch, one collecting pull request, background auto-pull of
+main, and merging the PR from the panel. Conflicts lock the merge and link
+to the pull request on GitHub.
+
+## Sync profiles
+
+Presets (Komplett / Ohne Anwendungen / Nur Kern-Konfiguration /
+Benutzerdefiniert) manage the sync scope through `.git/info/exclude` —
+your own `.gitignore` is never modified. The profile **Eigene .gitignore**
+hands the scope over to the repository's own `.gitignore`, editable right
+in the panel; it is the default when the chosen repository already has one.
+In every profile the safety exclusions (`secrets.yaml`, `.storage/`,
+databases, logs, caches) remain built-in and cannot be disabled.
 
 ## GitHub token
 

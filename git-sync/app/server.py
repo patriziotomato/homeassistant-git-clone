@@ -8,20 +8,32 @@ inside the app container (map: homeassistant_config); CONFIG_DIR overrides
 it for local development.
 """
 
+import asyncio
 import os
 import subprocess
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 import gh
+import git_ops
 import store
+import sync
 
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/homeassistant")
 STATIC_DIR = Path(__file__).parent / "static"
 
-app = FastAPI(title="Git Sync", docs_url=None, redoc_url=None)
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    task = asyncio.create_task(sync.poller())
+    yield
+    task.cancel()
+
+
+app = FastAPI(title="Git Sync", docs_url=None, redoc_url=None, lifespan=lifespan)
 
 # Sync profiles: which file groups end up in git. "apps_mode" is the
 # custom_components/ handling — "lockfile" records names & versions only.
@@ -42,6 +54,10 @@ PROFILES = {
                    "themes_www": False, "apps": False, "ui_export": False},
         "apps_mode": "lockfile",
     },
+    # The user's own .gitignore governs the sync scope; only the built-in
+    # safety exclusions stay managed. Default when the chosen repo already
+    # carries a .gitignore.
+    "eigene_gitignore": {"groups": {}, "apps_mode": None},
 }
 
 
@@ -133,7 +149,101 @@ def set_profile(payload: dict = Body(...)) -> dict:
     else:
         raise HTTPException(status_code=400, detail="unknown_profile")
     store.update(profile=profile)
+    # A profile change applies immediately on an already-coupled directory.
+    repo = store.load().get("repo")
+    if repo and git_ops.coupling_state(repo) == "coupled":
+        git_ops.apply_excludes(profile)
+        git_ops.write_lockfile(profile)
     return profile
+
+
+# ------------------------------------------------------------------ sync
+
+def _git_error(err: git_ops.GitError) -> HTTPException:
+    status = {"remote_mismatch": 409, "dirty": 409, "config_missing": 500}.get(err.kind, 500)
+    return HTTPException(status_code=status, detail=err.kind)
+
+
+@app.get("/api/sync")
+def sync_status() -> dict:
+    try:
+        return sync.full_status()
+    except (git_ops.GitError, gh.GitHubError) as err:
+        raise HTTPException(status_code=502, detail=getattr(err, "kind", "sync_failed")) from err
+
+
+@app.post("/api/sync/couple")
+def sync_couple(payload: dict = Body(default={})) -> dict:
+    if not sync.configured():
+        raise HTTPException(status_code=409, detail="not_configured")
+    try:
+        return sync.couple(force_remote=bool(payload.get("force_remote")))
+    except git_ops.GitError as err:
+        raise _git_error(err) from err
+
+
+@app.post("/api/sync/commit")
+def sync_commit(payload: dict = Body(default={})) -> dict:
+    try:
+        return sync.commit_now(payload.get("message"))
+    except git_ops.GitError as err:
+        raise _git_error(err) from err
+    except gh.GitHubError as err:
+        raise _github_error(err) from err
+
+
+@app.post("/api/sync/pull")
+def sync_pull() -> dict:
+    try:
+        return sync.pull_now()
+    except git_ops.GitError as err:
+        raise _git_error(err) from err
+    except gh.GitHubError as err:
+        raise _github_error(err) from err
+
+
+@app.post("/api/sync/merge")
+def sync_merge() -> dict:
+    try:
+        return sync.merge_now()
+    except git_ops.GitError as err:
+        raise _git_error(err) from err
+    except gh.GitHubError as err:
+        raise _github_error(err) from err
+
+
+@app.post("/api/sync/settings")
+def sync_settings(payload: dict = Body(...)) -> dict:
+    state = store.load()
+    settings = {**sync.DEFAULT_SETTINGS, **state.get("sync_settings", {})}
+    for key in ("auto_pull", "auto_commit"):
+        if key in payload:
+            settings[key] = bool(payload[key])
+    for key in ("auto_commit_delay", "poll_interval"):
+        if key in payload:
+            settings[key] = max(15, int(payload[key]))
+    store.update(sync_settings=settings)
+    return settings
+
+
+# ------------------------------------------------------------- .gitignore
+
+@app.get("/api/gitignore")
+def gitignore_get() -> dict:
+    target = Path(CONFIG_DIR) / ".gitignore"
+    if not target.exists():
+        return {"exists": False, "content": ""}
+    return {"exists": True, "content": target.read_text()}
+
+
+@app.put("/api/gitignore")
+def gitignore_put(payload: dict = Body(...)) -> dict:
+    content = payload.get("content")
+    if not isinstance(content, str):
+        raise HTTPException(status_code=400, detail="missing_content")
+    target = Path(CONFIG_DIR) / ".gitignore"
+    target.write_text(content if content.endswith("\n") or not content else content + "\n")
+    return {"exists": True, "content": target.read_text()}
 
 
 # ------------------------------------------------------------- GitHub proxy
@@ -163,6 +273,16 @@ def github_branches(repo: str) -> list[str]:
         return gh.list_branches(_token(), repo)
     except gh.GitHubError as err:
         raise _github_error(err) from err
+
+
+@app.get("/api/github/gitignore")
+def github_gitignore(repo: str, ref: str) -> dict:
+    """Does the chosen repo already carry a .gitignore? (wizard default)"""
+    try:
+        content = gh.get_file(_token(), repo, ".gitignore", ref)
+    except gh.GitHubError as err:
+        raise _github_error(err) from err
+    return {"exists": content is not None, "content": content or ""}
 
 
 # ---------------------------------------------------------------- git status

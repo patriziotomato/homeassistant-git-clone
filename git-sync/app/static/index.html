@@ -20,46 +20,53 @@
     border-bottom: 1px solid #e0e0e0; background: #fafafa;
   }
   .topbar h1 { font-size: 20px; font-weight: 400; margin: 0; flex-grow: 1; }
-  main { max-width: 880px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
   .card {
     background: #fff; border: 1px solid #e0e0e0; border-radius: 12px;
     padding: 20px; display: flex; flex-direction: column; gap: 14px;
   }
   .card h2 { font-size: 18px; font-weight: 400; margin: 0; }
-  .card h3 { font-size: 14px; font-weight: 500; margin: 0; }
+  .card h3 { font-size: 16px; font-weight: 500; margin: 0; }
   .row { display: flex; align-items: center; gap: 10px; }
   .grow { flex-grow: 1; }
+  .cols { display: flex; gap: 16px; align-items: flex-start; }
+  .col { display: flex; flex-direction: column; gap: 16px; flex-grow: 1; flex-basis: 0; min-width: 0; }
   .chip {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 12px; font-weight: 500; border-radius: 12px; padding: 4px 12px;
-    background: #eeeeee; color: #616161;
+    background: #eeeeee; color: #616161; white-space: nowrap;
   }
   .chip.ok { background: #e8f5e9; color: #2e7d32; }
   .chip.warn { background: #fff3e0; color: #ef6c00; }
+  .chip.err { background: #fbe9e7; color: #c62828; }
   .chip.exp { background: #f3e5f5; color: #6a1b9a; font-size: 10px; letter-spacing: 0.4px; }
   .mono { font-family: 'Roboto Mono', ui-monospace, monospace; }
   .meta { font-size: 13px; color: #727272; line-height: 1.5; }
   .label { font-size: 13px; font-weight: 500; color: #727272; }
-  input[type=text], input[type=password], select {
-    width: 100%; height: 44px; padding: 0 14px;
+  input[type=text], input[type=password], select, textarea {
+    width: 100%; padding: 0 14px;
     border: 1px solid #bdbdbd; border-radius: 4px;
     font-size: 14px; font-family: inherit; background: #fff; color: #212121;
   }
-  input:focus, select:focus { outline: none; border-color: #03a9f4; }
+  input[type=text], input[type=password], select { height: 44px; }
+  textarea { padding: 10px 14px; font-family: 'Roboto Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #03a9f4; }
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     height: 40px; padding: 0 20px; border: none; border-radius: 4px;
     background: #03a9f4; color: #fff; font-size: 14px; font-weight: 500;
     letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; font-family: inherit;
+    white-space: nowrap;
   }
   .btn:disabled { background: #e0e0e0; color: #9e9e9e; cursor: default; }
   .btn.text { background: transparent; color: #03a9f4; }
+  .btn.text:disabled { background: transparent; color: #9e9e9e; }
   .btn.text.danger { color: #c62828; }
   .file { display: flex; align-items: center; gap: 12px; font-size: 13px; }
   .badge {
     display: inline-flex; align-items: center; justify-content: center;
     width: 22px; height: 22px; border-radius: 4px; font-size: 12px; font-weight: 700;
-    background: #fff3e0; color: #ef6c00;
+    background: #fff3e0; color: #ef6c00; flex-shrink: 0;
   }
   .badge.add { background: #e8f5e9; color: #2e7d32; }
   .hint {
@@ -77,6 +84,12 @@
     background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 8px;
     padding: 12px 14px; font-size: 13px; color: #1b5e20; line-height: 1.5;
   }
+  .conflict {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 8px;
+    padding: 14px 16px; font-size: 13px; color: #6d4c41; line-height: 1.6;
+  }
+  .conflict strong { color: #e65100; }
   .error { font-size: 13px; color: #c62828; }
   .divider { height: 1px; background: #eeeeee; }
   .empty { font-size: 14px; color: #727272; }
@@ -112,6 +125,16 @@
   }
   .seg button.on { background: #e1f5fe; color: #0277bd; }
   .seg button + button { border-left: 1px solid #bdbdbd; }
+  .switch { position: relative; width: 36px; height: 14px; flex-shrink: 0; cursor: pointer; }
+  .switch .track { width: 36px; height: 14px; border-radius: 7px; background: rgba(0,0,0,0.26); }
+  .switch .thumb {
+    position: absolute; top: -3px; left: 0; width: 20px; height: 20px; border-radius: 50%;
+    background: #fafafa; box-shadow: 0 1px 3px rgba(0,0,0,0.4); transition: left .15s;
+  }
+  .switch.on .track { background: #81d4fa; }
+  .switch.on .thumb { left: 16px; background: #03a9f4; }
+  .commit { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .commit .when { color: #9e9e9e; white-space: nowrap; }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -188,10 +211,15 @@
     <!-- Schritt 3: Profil -->
     <div id="view3" class="card hidden">
       <h2>Profil wählen</h2>
-      <div class="meta">Ein Profil bestimmt, welche Dateigruppen ins Repository wandern.</div>
+      <div class="meta">Ein Profil bestimmt, welche Dateien ins Repository wandern.</div>
       <div class="profiles" id="profiles"></div>
       <div id="groups"></div>
-      <div class="hint">Immer ausgeschlossen und nicht abwählbar: <span class="mono">secrets.yaml · .storage/ (Rohdaten) · *.db · Logs &amp; Caches</span></div>
+      <div id="gitignore-editor" class="hidden">
+        <div class="label" style="margin-bottom:6px">.gitignore</div>
+        <textarea id="gitignore-text" rows="12" spellcheck="false"></textarea>
+        <div class="meta" style="margin-top:6px">Deine <span class="mono">.gitignore</span> bestimmt, was ins Repository wandert — du pflegst sie hier selbst. Änderungen werden wie jede andere Datei mitversioniert.</div>
+      </div>
+      <div class="hint">Immer ausgeschlossen und nicht abwählbar — unabhängig vom Profil: <span class="mono">secrets.yaml · .storage/ (Rohdaten) · *.db · Logs &amp; Caches</span></div>
       <div id="err3" class="error hidden"></div>
       <div class="row">
         <button class="btn text" id="back3">Zurück</button>
@@ -202,32 +230,120 @@
 
     <!-- Dashboard -->
     <div id="viewdash" class="hidden" style="display:flex;flex-direction:column;gap:16px">
-      <div class="card">
-        <div class="row">
-          <h3 class="grow" style="font-size:16px">Repository-Status</h3>
-          <span id="branch" class="chip mono hidden"></span>
-        </div>
-        <div id="status" class="empty">Lade Status …</div>
-        <div id="details" class="hidden">
-          <div class="meta" id="remote"></div>
-          <div class="meta" id="lastcommit"></div>
-          <div class="meta" id="tracking"></div>
-        </div>
-        <div class="divider"></div>
-        <div class="row"><h3 class="grow">Lokale Änderungen</h3><span id="changecount" class="chip hidden"></span></div>
-        <div id="changes" class="empty">–</div>
-      </div>
-      <div class="card">
-        <div class="row"><h3 class="grow" style="font-size:16px">Einrichtung</h3></div>
-        <div class="meta" id="sumrepo"></div>
-        <div class="meta" id="sumbranches"></div>
-        <div class="meta" id="sumprofile"></div>
-        <div class="hint">Als Nächstes: Auto-Commit in den Sammel-PR, Auto-Pull vom Main-Branch, Merge aus dieser Ansicht und Konflikt-Hinweise mit GitHub-Link.</div>
+
+      <!-- Kopplung nötig -->
+      <div id="couplecard" class="card hidden">
+        <h3>Konfiguration koppeln</h3>
+        <div class="meta" id="couplemsg"></div>
+        <div id="coupleerr" class="error hidden"></div>
         <div class="row">
           <span class="grow"></span>
-          <button class="btn text danger" id="disconnect">Verbindung trennen</button>
+          <button class="btn text hidden" id="coupleforce">Remote umstellen &amp; koppeln</button>
+          <button class="btn" id="couplebtn">Jetzt koppeln</button>
         </div>
       </div>
+
+      <!-- Konflikt-Banner -->
+      <div id="conflictbanner" class="conflict hidden">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef6c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="M12 3l10 18H2L12 3z"></path><path d="M12 10v5"></path><path d="M12 18.5h.01"></path></svg>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <strong>Konflikt zwischen deinen Änderungen und dem Main-Branch</strong>
+          <span>Git Sync löst Konflikte bewusst nicht in Home Assistant — entscheide auf GitHub im Pull Request, welche Änderungen gelten sollen. Danach geht es hier automatisch weiter.</span>
+          <div><a id="conflictlink" href="#" target="_blank" rel="noopener"><button class="btn">Auf GitHub lösen</button></a></div>
+        </div>
+      </div>
+
+      <div class="cols" id="dashcols">
+        <div class="col">
+          <!-- Status -->
+          <div class="card">
+            <div class="row">
+              <svg id="statusicon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 12.5l2.5 2.5 5-5.5"></path></svg>
+              <h3 class="grow" id="statustitle">Status</h3>
+              <span id="branchchip" class="chip mono"></span>
+            </div>
+            <div class="meta" id="statusmeta"></div>
+            <div class="divider"></div>
+            <div class="row">
+              <div class="switch" id="autopull"><div class="track"></div><div class="thumb"></div></div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:14px">Änderungen aus main sofort übernehmen</div>
+                <div class="meta" style="font-size:12px">Automatischer Pull im Hintergrund</div>
+              </div>
+            </div>
+          </div>
+          <!-- Lokale Änderungen -->
+          <div class="card">
+            <div class="row">
+              <h3 class="grow">Lokale Änderungen</h3>
+              <span id="changecount" class="chip hidden"></span>
+            </div>
+            <div id="changes" class="empty">Keine lokalen Änderungen — alles committet.</div>
+            <div id="commitbox" class="hidden">
+              <div class="label" style="margin-bottom:6px">Commit-Nachricht</div>
+              <input type="text" id="commitmsg">
+              <div class="row" style="margin-top:10px">
+                <span class="meta" id="autocommitinfo"></span>
+                <span class="grow"></span>
+                <button class="btn" id="commitbtn">Jetzt committen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <!-- Sync-PR -->
+          <div class="card">
+            <div class="row">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#212121" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"></circle><circle cx="6" cy="18" r="2.5"></circle><circle cx="18" cy="18" r="2.5"></circle><path d="M6 8.5v7"></path><path d="M13 6h3a2 2 0 0 1 2 2v7.5"></path><path d="M15.5 3.5L13 6l2.5 2.5"></path></svg>
+              <h3 class="grow">Offener Sync-PR</h3>
+              <span id="prchip" class="chip hidden"></span>
+            </div>
+            <div id="prempty" class="empty">Kein offener Sync-PR — es liegt nichts zum Mergen bereit.</div>
+            <div id="prbox" class="hidden" style="display:flex;flex-direction:column;gap:12px">
+              <div style="font-size:15px;font-weight:500" id="prtitle"></div>
+              <div id="prcommits" style="display:flex;flex-direction:column;gap:8px"></div>
+              <div class="hint">Mergen ist immer eine bewusste, manuelle Aktion — nie automatisch. Erst der Merge verändert main.</div>
+              <div class="row">
+                <button class="btn" id="mergebtn">PR mergen …</button>
+                <a id="prlink" href="#" target="_blank" rel="noopener"><button class="btn text">Auf GitHub ansehen</button></a>
+              </div>
+            </div>
+          </div>
+          <!-- Eingehend -->
+          <div class="card">
+            <div class="row">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#212121" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>
+              <h3 class="grow">Eingehend von main</h3>
+              <span id="incount" class="chip hidden"></span>
+            </div>
+            <div id="incoming" class="empty">Auf Stand mit main.</div>
+            <div class="row hidden" id="pullrow">
+              <span class="grow"></span>
+              <button class="btn" id="pullbtn">Jetzt übernehmen</button>
+            </div>
+          </div>
+          <!-- Verwaltung -->
+          <div class="card">
+            <h3>Einrichtung</h3>
+            <div class="meta" id="sumrepo"></div>
+            <div class="meta" id="sumprofile"></div>
+            <div class="row">
+              <button class="btn text" id="editgitignore">.gitignore bearbeiten</button>
+              <span class="grow"></span>
+              <button class="btn text danger" id="disconnect">Verbindung trennen</button>
+            </div>
+            <div id="dash-gitignore" class="hidden">
+              <textarea id="dash-gitignore-text" rows="10" spellcheck="false"></textarea>
+              <div class="row" style="margin-top:8px">
+                <span class="grow"></span>
+                <button class="btn text" id="dash-gitignore-cancel">Abbrechen</button>
+                <button class="btn" id="dash-gitignore-save">Speichern</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="dasherr" class="error hidden"></div>
     </div>
   </main>
 <script>
@@ -243,15 +359,21 @@
     { key: 'ui_export', name: 'UI-verwaltete Einstellungen', files: 'Bereinigter Export ausgewählter .storage-Inhalte', exp: true }
   ];
   var PROFILES = [
+    { key: 'eigene_gitignore', name: 'Eigene .gitignore', desc: 'Deine .gitignore bestimmt den Umfang — du pflegst sie selbst.' },
     { key: 'komplett', name: 'Komplett', desc: 'Alle Dateigruppen inklusive vollständigem Anwendungs-Code.' },
-    { key: 'ohne_anwendungen', name: 'Ohne Anwendungen', desc: 'Konfiguration ja — Anwendungen nur als Versions-Lockfile.', recommended: true },
+    { key: 'ohne_anwendungen', name: 'Ohne Anwendungen', desc: 'Konfiguration ja — Anwendungen nur als Versions-Lockfile.' },
     { key: 'nur_kern', name: 'Nur Kern-Konfiguration', desc: 'Nur die zentralen YAML-Dateien.' },
     { key: 'benutzerdefiniert', name: 'Benutzerdefiniert', desc: 'Dateigruppen frei zusammenstellen.' }
   ];
   var PRESETS = {
     komplett: { groups: { core: true, blueprints: true, esphome: true, themes_www: true, apps: true, ui_export: false }, apps_mode: 'full' },
     ohne_anwendungen: { groups: { core: true, blueprints: true, esphome: true, themes_www: true, apps: true, ui_export: false }, apps_mode: 'lockfile' },
-    nur_kern: { groups: { core: true, blueprints: false, esphome: false, themes_www: false, apps: false, ui_export: false }, apps_mode: 'lockfile' }
+    nur_kern: { groups: { core: true, blueprints: false, esphome: false, themes_www: false, apps: false, ui_export: false }, apps_mode: 'lockfile' },
+    eigene_gitignore: { groups: {}, apps_mode: null }
+  };
+  var PROFILE_LABELS = {
+    eigene_gitignore: 'Eigene .gitignore', komplett: 'Komplett', ohne_anwendungen: 'Ohne Anwendungen',
+    nur_kern: 'Nur Kern-Konfiguration', benutzerdefiniert: 'Benutzerdefiniert'
   };
   var ERRORS = {
     invalid_token: 'Der Token wurde von GitHub nicht akzeptiert. Bitte prüfe Wert und Berechtigungen.',
@@ -260,11 +382,17 @@
     branches_equal: 'Main- und Sync-Branch müssen unterschiedlich sein.',
     invalid_repo: 'Bitte ein Repository auswählen.',
     missing_name: 'Bitte einen Repo-Namen angeben.',
-    missing_token: 'Bitte einen Token eingeben.'
+    missing_token: 'Bitte einen Token eingeben.',
+    remote_mismatch: 'Das Konfigurationsverzeichnis zeigt auf ein anderes Remote.',
+    not_configured: 'Einrichtung unvollständig.',
+    git_failed: 'Ein Git-Befehl ist fehlgeschlagen — Details im App-Protokoll.',
+    config_missing: 'Konfigurationsverzeichnis nicht gefunden.'
   };
 
   var el = function (id) { return document.getElementById(id); };
-  var state = { profile: 'ohne_anwendungen', groups: {}, apps_mode: 'lockfile' };
+  var state = { profile: 'ohne_anwendungen', groups: {}, apps_mode: 'lockfile', gitignorePrefilled: false };
+  var syncData = null;
+  var refreshTimer = null;
 
   function api(method, path, body) {
     return fetch(path, {
@@ -301,6 +429,8 @@
     el('l1').classList.toggle('done', step > 1);
     el('l2').classList.toggle('done', step > 2);
     el(step === 0 ? 'viewdash' : 'view' + step).classList.remove('hidden');
+    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+    if (step === 0) refreshTimer = setInterval(loadSync, 30000);
   }
 
   function boot() {
@@ -308,8 +438,8 @@
       var login = setup.github && setup.github.login;
       show(setup.step, login);
       if (setup.step === 2) loadRepos();
-      if (setup.step === 3) renderProfiles();
-      if (setup.step === 0) { renderSummary(setup); loadStatus(); }
+      if (setup.step === 3) prepareProfileStep(setup);
+      if (setup.step === 0) { renderSummary(setup); loadSync(); }
     });
   }
 
@@ -374,6 +504,23 @@
   });
 
   // ---- Schritt 3
+  function prepareProfileStep(setup) {
+    // Lokale .gitignore hat Vorrang; sonst die aus dem gewählten Repo.
+    api('GET', 'api/gitignore').then(function (local) {
+      if (local.exists) return { exists: true, content: local.content };
+      var repo = setup.repo;
+      return api('GET', 'api/github/gitignore?repo=' + encodeURIComponent(repo.full_name) +
+                        '&ref=' + encodeURIComponent(repo.main_branch))
+        .catch(function () { return { exists: false, content: '' }; });
+    }).then(function (gi) {
+      if (gi.exists) {
+        state.profile = 'eigene_gitignore';
+        el('gitignore-text').value = gi.content;
+        state.gitignorePrefilled = true;
+      }
+      renderProfiles();
+    });
+  }
   function renderProfiles() {
     var wrap = el('profiles');
     wrap.innerHTML = '';
@@ -388,7 +535,7 @@
       desc.textContent = profile.desc;
       card.appendChild(name);
       card.appendChild(desc);
-      if (profile.recommended) {
+      if (profile.key === state.recommended) {
         var rec = document.createElement('span');
         rec.className = 'chip ok';
         rec.style.alignSelf = 'flex-start';
@@ -405,14 +552,22 @@
       });
       wrap.appendChild(card);
     });
-    if (PRESETS[state.profile] && !Object.keys(state.groups).length) {
-      state.groups = Object.assign({}, PRESETS[state.profile].groups);
-      state.apps_mode = PRESETS[state.profile].apps_mode;
-    }
-    renderGroups();
-  }
-  function renderGroups() {
     var custom = state.profile === 'benutzerdefiniert';
+    var own = state.profile === 'eigene_gitignore';
+    el('gitignore-editor').classList.toggle('hidden', !own);
+    el('groups').classList.toggle('hidden', own);
+    if (own && !el('gitignore-text').value && !state.gitignorePrefilled) {
+      api('GET', 'api/gitignore').then(function (gi) { el('gitignore-text').value = gi.content; });
+    }
+    if (!own) {
+      if (PRESETS[state.profile] && !Object.keys(state.groups).length) {
+        state.groups = Object.assign({}, PRESETS[state.profile].groups);
+        state.apps_mode = PRESETS[state.profile].apps_mode;
+      }
+      renderGroups(custom);
+    }
+  }
+  function renderGroups(custom) {
     var wrap = el('groups');
     wrap.innerHTML = '';
     GROUPS.forEach(function (group) {
@@ -451,7 +606,7 @@
           btn.textContent = mode[1];
           btn.className = state.apps_mode === mode[0] ? 'on' : '';
           btn.disabled = !custom;
-          btn.addEventListener('click', function () { state.apps_mode = mode[0]; renderGroups(); });
+          btn.addEventListener('click', function () { state.apps_mode = mode[0]; renderGroups(custom); });
           seg.appendChild(btn);
         });
         row.appendChild(seg);
@@ -461,8 +616,12 @@
   }
   el('finish').addEventListener('click', function () {
     el('err3').classList.add('hidden');
-    api('POST', 'api/setup/profile', { name: state.profile, groups: state.groups, apps_mode: state.apps_mode })
-      .then(boot).catch(function (err) { showError('err3', err); });
+    var save = state.profile === 'eigene_gitignore'
+      ? api('PUT', 'api/gitignore', { content: el('gitignore-text').value })
+      : Promise.resolve();
+    save.then(function () {
+      return api('POST', 'api/setup/profile', { name: state.profile, groups: state.groups, apps_mode: state.apps_mode });
+    }).then(boot).catch(function (err) { showError('err3', err); });
   });
   el('back3').addEventListener('click', function () {
     show(2);
@@ -471,10 +630,10 @@
 
   // ---- Dashboard
   function renderSummary(setup) {
-    el('sumrepo').textContent = 'Repository: ' + setup.repo.full_name;
-    el('sumbranches').textContent = 'Main-Branch: ' + setup.repo.main_branch + ' (Quelle der Wahrheit) · Sync-Branch: ' + setup.repo.sync_branch;
-    var profile = PROFILES.filter(function (p) { return p.key === setup.profile.name; })[0];
-    el('sumprofile').textContent = 'Profil: ' + (profile ? profile.name : setup.profile.name) +
+    window.__profileName = setup.profile.name;
+    el('sumrepo').textContent = 'Repository: ' + setup.repo.full_name +
+      ' · Main: ' + setup.repo.main_branch + ' · Sync: ' + setup.repo.sync_branch;
+    el('sumprofile').textContent = 'Profil: ' + (PROFILE_LABELS[setup.profile.name] || setup.profile.name) +
       (setup.profile.apps_mode === 'lockfile' ? ' · Anwendungen als Lockfile' : '');
   }
   el('disconnect').addEventListener('click', function () {
@@ -483,50 +642,217 @@
     }
   });
 
-  function loadStatus() {
-    api('GET', 'api/status').then(function (s) {
-      var statusEl = el('status');
-      if (!s.exists) { statusEl.textContent = 'Konfigurationsverzeichnis nicht gefunden: ' + s.config_dir; return; }
-      if (!s.is_repo) { statusEl.textContent = 'Die Konfiguration (' + s.config_dir + ') ist noch kein Git-Repository. Die Kopplung folgt im nächsten Meilenstein.'; return; }
-      statusEl.classList.add('hidden');
-      var branch = el('branch');
-      branch.textContent = s.branch || '?';
-      branch.classList.remove('hidden');
-      branch.classList.add('ok');
-      el('details').classList.remove('hidden');
-      el('remote').textContent = s.remote ? 'Remote: ' + s.remote : 'Kein Remote konfiguriert';
-      if (s.last_commit) {
-        el('lastcommit').textContent = 'Letzter Commit: ' + s.last_commit.hash + ' — ' + s.last_commit.subject + ' (' + s.last_commit.when + ')';
-      }
-      if (s.ahead !== null && s.ahead !== undefined) {
-        el('tracking').textContent = s.ahead + ' Commit(s) voraus · ' + s.behind + ' hinterher gegenüber Upstream';
-      }
-      var list = el('changes');
-      var count = el('changecount');
-      if (!s.changes.length) {
-        list.textContent = 'Keine lokalen Änderungen — alles committed.';
-      } else {
-        count.classList.remove('hidden');
-        count.classList.add('warn');
-        count.textContent = s.changes.length + ' Datei(en)';
-        list.classList.remove('empty');
-        list.innerHTML = '';
-        s.changes.forEach(function (c) {
-          var row = document.createElement('div');
-          row.className = 'file';
-          var badge = document.createElement('span');
-          badge.className = 'badge' + (c.state === 'A' || c.state === '??' ? ' add' : '');
-          badge.textContent = c.state === '??' ? 'N' : c.state;
-          var path = document.createElement('span');
-          path.className = 'mono';
-          path.textContent = c.path;
-          row.appendChild(badge);
-          row.appendChild(path);
-          list.appendChild(row);
-        });
-      }
-    }).catch(function (err) { el('status').textContent = 'Status konnte nicht geladen werden: ' + err; });
+  function loadSync() {
+    api('GET', 'api/sync').then(function (s) {
+      syncData = s;
+      el('dasherr').classList.add('hidden');
+      renderCoupling(s);
+      if (s.coupling !== 'coupled') return;
+      renderStatus(s);
+      renderChanges(s);
+      renderPr(s);
+      renderIncoming(s);
+    }).catch(function (err) { showError('dasherr', err); });
   }
+
+  function renderCoupling(s) {
+    var need = s.coupling !== 'coupled';
+    el('couplecard').classList.toggle('hidden', !need);
+    el('dashcols').classList.toggle('hidden', need);
+    el('conflictbanner').classList.add('hidden');
+    if (!need) return;
+    var messages = {
+      not_a_repo: 'Deine Konfiguration ist noch kein Git-Repository. Beim Koppeln wird der Main-Branch als Ausgangsbasis übernommen — lokale Unterschiede bleiben als Änderungen erhalten und wandern in den Sync-PR.',
+      no_origin: 'Das Repository hat noch kein Remote. Beim Koppeln wird dein gewähltes GitHub-Repo als Remote eingerichtet.',
+      remote_mismatch: 'Das Konfigurationsverzeichnis zeigt auf ein anderes Remote' + (s.current_remote ? ' (' + s.current_remote + ')' : '') + '. Zum Koppeln muss es auf dein gewähltes Repo umgestellt werden.',
+      wrong_branch: 'Die Konfiguration ist noch nicht auf dem Sync-Branch. Beim Koppeln wechselt Git Sync auf ' + s.repo.sync_branch + ' — am Arbeitsstand ändert sich nichts.',
+      config_missing: 'Konfigurationsverzeichnis nicht gefunden.'
+    };
+    el('couplemsg').textContent = messages[s.coupling] || s.coupling;
+    el('coupleforce').classList.toggle('hidden', s.coupling !== 'remote_mismatch');
+    el('couplebtn').classList.toggle('hidden', s.coupling === 'remote_mismatch');
+  }
+  function couple(force) {
+    el('coupleerr').classList.add('hidden');
+    api('POST', 'api/sync/couple', { force_remote: !!force })
+      .then(loadSync)
+      .catch(function (err) { showError('coupleerr', err); });
+  }
+  el('couplebtn').addEventListener('click', function () { couple(false); });
+  el('coupleforce').addEventListener('click', function () { couple(true); });
+
+  function renderStatus(s) {
+    var behind = s.incoming_count || 0;
+    el('branchchip').textContent = s.repo.sync_branch;
+    el('statustitle').textContent = behind === 0 ? 'Auf Stand mit ' + s.repo.main_branch : behind + ' Commit(s) hinter ' + s.repo.main_branch;
+    var when = s.last_pull ? new Date(s.last_pull * 1000).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '–';
+    el('statusmeta').textContent = 'Letzter Abgleich: ' + when + ' Uhr · Profil: ' + (PROFILE_LABELS[(syncData && lastProfileName()) || ''] || lastProfileName() || '');
+    var sw = el('autopull');
+    sw.classList.toggle('on', !!s.settings.auto_pull);
+    sw.onclick = function () {
+      api('POST', 'api/sync/settings', { auto_pull: !s.settings.auto_pull }).then(loadSync);
+    };
+  }
+  function lastProfileName() {
+    return (window.__profileName || '');
+  }
+
+  function renderChanges(s) {
+    var list = el('changes');
+    var count = el('changecount');
+    var box = el('commitbox');
+    if (!s.changes || !s.changes.length) {
+      list.textContent = 'Keine lokalen Änderungen — alles committet.';
+      list.classList.add('empty');
+      count.classList.add('hidden');
+      box.classList.add('hidden');
+      return;
+    }
+    count.classList.remove('hidden');
+    count.className = 'chip warn';
+    count.textContent = s.changes.length + ' Datei(en)';
+    list.classList.remove('empty');
+    list.innerHTML = '';
+    s.changes.slice(0, 8).forEach(function (c) {
+      var row = document.createElement('div');
+      row.className = 'file';
+      var badge = document.createElement('span');
+      badge.className = 'badge' + (c.state === 'A' || c.state === '??' ? ' add' : '');
+      badge.textContent = c.state === '??' ? 'N' : c.state;
+      var path = document.createElement('span');
+      path.className = 'mono';
+      path.textContent = c.path;
+      row.appendChild(badge);
+      row.appendChild(path);
+      list.appendChild(row);
+    });
+    if (s.changes.length > 8) {
+      var more = document.createElement('div');
+      more.className = 'meta';
+      more.textContent = '… und ' + (s.changes.length - 8) + ' weitere';
+      list.appendChild(more);
+    }
+    box.classList.remove('hidden');
+    if (document.activeElement !== el('commitmsg')) {
+      el('commitmsg').value = s.suggested_message || '';
+    }
+    var info = el('autocommitinfo');
+    if (s.auto_commit_at) {
+      var secs = Math.max(0, s.auto_commit_at - Math.floor(Date.now() / 1000));
+      info.textContent = 'Auto-Commit in ~' + Math.ceil(secs / 60) + ' Min.';
+    } else if (!s.settings.auto_commit) {
+      info.textContent = 'Auto-Commit ist aus.';
+    } else {
+      info.textContent = '';
+    }
+    el('commitbtn').onclick = function () {
+      el('commitbtn').disabled = true;
+      api('POST', 'api/sync/commit', { message: el('commitmsg').value })
+        .then(loadSync)
+        .catch(function (err) { showError('dasherr', err); })
+        .finally(function () { el('commitbtn').disabled = false; });
+    };
+  }
+
+  function renderPr(s) {
+    var pr = s.pr;
+    el('prempty').classList.toggle('hidden', !!pr);
+    el('prbox').classList.toggle('hidden', !pr);
+    var chip = el('prchip');
+    chip.classList.toggle('hidden', !pr);
+    if (!pr) return;
+    var conflict = pr.mergeable === false;
+    chip.className = 'chip ' + (conflict ? 'err' : (pr.mergeable ? 'ok' : ''));
+    chip.textContent = conflict ? 'Konflikt' : (pr.mergeable ? 'Mergebar' : 'Prüfung läuft …');
+    el('prtitle').textContent = '#' + pr.number + ' · ' + (pr.title || '');
+    el('prlink').href = pr.url;
+    var wrap = el('prcommits');
+    wrap.innerHTML = '';
+    (s.outgoing || []).slice(0, 5).forEach(function (c) {
+      var row = document.createElement('div');
+      row.className = 'commit';
+      var subject = document.createElement('span');
+      subject.className = 'grow';
+      subject.textContent = c.subject;
+      var when = document.createElement('span');
+      when.className = 'when';
+      when.textContent = c.when;
+      row.appendChild(subject);
+      row.appendChild(when);
+      wrap.appendChild(row);
+    });
+    var banner = el('conflictbanner');
+    banner.classList.toggle('hidden', !conflict);
+    if (conflict) el('conflictlink').href = pr.url;
+    var mergebtn = el('mergebtn');
+    mergebtn.disabled = conflict;
+    mergebtn.onclick = function () {
+      if (!window.confirm('Sync-PR #' + pr.number + ' jetzt in ' + s.repo.main_branch + ' mergen?')) return;
+      mergebtn.disabled = true;
+      api('POST', 'api/sync/merge')
+        .then(function (result) {
+          if (!result.merged && result.error === 'conflict') loadSync();
+          else loadSync();
+        })
+        .catch(function (err) { showError('dasherr', err); })
+        .finally(function () { mergebtn.disabled = false; });
+    };
+  }
+
+  function renderIncoming(s) {
+    var count = s.incoming_count || 0;
+    var chipEl = el('incount');
+    var list = el('incoming');
+    chipEl.classList.toggle('hidden', count === 0);
+    el('pullrow').classList.toggle('hidden', count === 0);
+    if (count === 0) {
+      list.textContent = 'Auf Stand mit ' + s.repo.main_branch + '.';
+      list.classList.add('empty');
+      return;
+    }
+    chipEl.className = 'chip';
+    chipEl.textContent = count + ' Commit(s)';
+    list.classList.remove('empty');
+    list.innerHTML = '';
+    (s.incoming || []).forEach(function (c) {
+      var row = document.createElement('div');
+      row.className = 'commit';
+      var subject = document.createElement('span');
+      subject.className = 'grow';
+      subject.textContent = c.subject;
+      var when = document.createElement('span');
+      when.className = 'when';
+      when.textContent = c.when;
+      row.appendChild(subject);
+      row.appendChild(when);
+      list.appendChild(row);
+    });
+    el('pullbtn').onclick = function () {
+      el('pullbtn').disabled = true;
+      api('POST', 'api/sync/pull')
+        .then(loadSync)
+        .catch(function (err) { showError('dasherr', err); })
+        .finally(function () { el('pullbtn').disabled = false; });
+    };
+  }
+
+  // .gitignore-Editor im Dashboard
+  el('editgitignore').addEventListener('click', function () {
+    var box = el('dash-gitignore');
+    if (!box.classList.contains('hidden')) { box.classList.add('hidden'); return; }
+    api('GET', 'api/gitignore').then(function (gi) {
+      el('dash-gitignore-text').value = gi.content;
+      box.classList.remove('hidden');
+    });
+  });
+  el('dash-gitignore-cancel').addEventListener('click', function () {
+    el('dash-gitignore').classList.add('hidden');
+  });
+  el('dash-gitignore-save').addEventListener('click', function () {
+    api('PUT', 'api/gitignore', { content: el('dash-gitignore-text').value })
+      .then(function () { el('dash-gitignore').classList.add('hidden'); loadSync(); })
+      .catch(function (err) { showError('dasherr', err); });
+  });
 
   boot();
 })();
