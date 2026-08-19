@@ -66,6 +66,77 @@ def list_branches(token: str, full_name: str) -> list[str]:
     return [branch["name"] for branch in data]
 
 
+def get_file(token: str, full_name: str, path: str, ref: str) -> str | None:
+    """File content at ref, or None if it does not exist."""
+    import base64
+
+    try:
+        data = _request(
+            token, "GET", f"/repos/{full_name}/contents/{path}", params={"ref": ref}
+        ).json()
+    except GitHubError as err:
+        if err.kind == "forbidden":  # 404 maps here
+            return None
+        raise
+    if isinstance(data, dict) and data.get("encoding") == "base64":
+        return base64.b64decode(data["content"]).decode("utf-8", "replace")
+    return None
+
+
+def find_open_pr(token: str, full_name: str, head_branch: str) -> dict | None:
+    owner = full_name.split("/")[0]
+    data = _request(
+        token,
+        "GET",
+        f"/repos/{full_name}/pulls",
+        params={"state": "open", "head": f"{owner}:{head_branch}", "per_page": 1},
+    ).json()
+    return _pr_fields(data[0]) if data else None
+
+
+def get_pr(token: str, full_name: str, number: int) -> dict:
+    return _pr_fields(_request(token, "GET", f"/repos/{full_name}/pulls/{number}").json())
+
+
+def create_pr(token: str, full_name: str, head: str, base: str, title: str, body: str) -> dict:
+    data = _request(
+        token,
+        "POST",
+        f"/repos/{full_name}/pulls",
+        json={"title": title, "head": head, "base": base, "body": body},
+    ).json()
+    return _pr_fields(data)
+
+
+def merge_pr(token: str, full_name: str, number: int, method: str = "squash") -> dict:
+    data = _request(
+        token,
+        "PUT",
+        f"/repos/{full_name}/pulls/{number}/merge",
+        json={"merge_method": method},
+    ).json()
+    return {"merged": bool(data.get("merged")), "sha": data.get("sha")}
+
+
+def delete_branch(token: str, full_name: str, branch: str) -> None:
+    try:
+        _request(token, "DELETE", f"/repos/{full_name}/git/refs/heads/{branch}")
+    except GitHubError:
+        pass  # already gone — not worth failing the merge flow over
+
+
+def _pr_fields(data: dict) -> dict:
+    return {
+        "number": data["number"],
+        "title": data.get("title"),
+        "url": data.get("html_url"),
+        "state": data.get("state"),
+        "mergeable": data.get("mergeable"),
+        "mergeable_state": data.get("mergeable_state"),
+        "commits": data.get("commits"),
+    }
+
+
 def create_repo(token: str, name: str) -> dict:
     data = _request(
         token,
