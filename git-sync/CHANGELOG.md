@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.1
+
+- Fix: when creating the collecting pull request failed once (network
+  hiccup, missing pull-request permission on a fine-grained token), the
+  pushed sync branch stayed on GitHub without a PR forever. The app now
+  retries automatically in the background, the dashboard shows the real
+  cause plus a "PR jetzt anlegen" button, and a failed PR creation no
+  longer masks a successful commit.
+
 ## 0.5.0
 
 - After changes from main land in the configuration, the app now runs the

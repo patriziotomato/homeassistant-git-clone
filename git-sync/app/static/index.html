@@ -320,6 +320,11 @@
               <span id="prchip" class="chip hidden"></span>
             </div>
             <div id="prempty" class="empty">Kein offener Sync-PR — es liegt nichts zum Mergen bereit.</div>
+            <div id="prmissing" class="hidden" style="display:flex;flex-direction:column;gap:10px">
+              <div class="meta">Es liegen Commits auf dem Sync-Branch bereit, aber der Sammel-PR fehlt noch (die Erstellung wird automatisch nachgeholt — oder direkt hier):</div>
+              <div id="prmissingerr" class="error hidden"></div>
+              <div class="row"><span class="grow"></span><button class="btn" id="createprbtn">PR jetzt anlegen</button></div>
+            </div>
             <div id="prbox" class="hidden" style="display:flex;flex-direction:column;gap:12px">
               <div style="font-size:15px;font-weight:500" id="prtitle"></div>
               <div id="prcommits" style="display:flex;flex-direction:column;gap:8px"></div>
@@ -893,10 +898,24 @@
 
   function renderPr(s) {
     var pr = s.pr;
-    el('prempty').classList.toggle('hidden', !!pr);
+    var waiting = !pr && (s.outgoing || []).length > 0;
+    el('prempty').classList.toggle('hidden', !!pr || waiting);
+    el('prmissing').classList.toggle('hidden', !waiting);
     el('prbox').classList.toggle('hidden', !pr);
     var chip = el('prchip');
     chip.classList.toggle('hidden', !pr);
+    if (waiting) {
+      var errbox = el('prmissingerr');
+      errbox.classList.toggle('hidden', !s.pr_error);
+      if (s.pr_error) errbox.textContent = ERRORS[s.pr_error] || ('Fehler: ' + s.pr_error);
+      el('createprbtn').onclick = function () {
+        el('createprbtn').disabled = true;
+        api('POST', 'api/sync/ensure-pr')
+          .then(loadSync)
+          .catch(function (err) { showError('prmissingerr', err); })
+          .finally(function () { el('createprbtn').disabled = false; });
+      };
+    }
     if (!pr) return;
     var conflict = pr.mergeable === false;
     chip.className = 'chip ' + (conflict ? 'err' : (pr.mergeable ? 'ok' : ''));
