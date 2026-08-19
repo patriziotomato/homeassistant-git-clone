@@ -80,6 +80,15 @@ check("lockfile tracked", git_ops.LOCKFILE in paths, str(paths))
 lock = json.loads((CONFIG / git_ops.LOCKFILE).read_text())
 check("lockfile content", lock["applications"].get("demo_app") == "1.2.3", str(lock))
 
+# 1b) Regression: fetch before the first push — the sync branch does not
+# exist on the remote yet, which must not fail the fetch ("Jetzt übernehmen"
+# right after coupling).
+try:
+    git_ops.fetch(None, REPO)
+    check("fetch tolerates missing remote sync branch", True)
+except git_ops.GitError as err:
+    check("fetch tolerates missing remote sync branch", False, str(err))
+
 # 2) Commit & push onto the sync branch
 sha = git_ops.commit_and_push(None, REPO, "Sync: Testlauf", PROFILE_OA)
 check("commit pushed", sha is not None)
