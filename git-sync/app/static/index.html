@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Git Sync</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #fafafa;
+    color: #212121;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: #03a9f4; text-decoration: none; }
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    height: 56px; padding: 0 24px;
+    border-bottom: 1px solid #e0e0e0; background: #fafafa;
+  }
+  .topbar h1 { font-size: 20px; font-weight: 400; margin: 0; flex-grow: 1; }
+  main { max-width: 880px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .card {
+    background: #fff; border: 1px solid #e0e0e0; border-radius: 12px;
+    padding: 20px; display: flex; flex-direction: column; gap: 14px;
+  }
+  .card h2 { font-size: 16px; font-weight: 500; margin: 0; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .grow { flex-grow: 1; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500; border-radius: 12px; padding: 4px 12px;
+    background: #eeeeee; color: #616161;
+  }
+  .chip.ok { background: #e8f5e9; color: #2e7d32; }
+  .chip.warn { background: #fff3e0; color: #ef6c00; }
+  .mono { font-family: 'Roboto Mono', ui-monospace, monospace; }
+  .meta { font-size: 13px; color: #727272; }
+  .file { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+  .badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 4px; font-size: 12px; font-weight: 700;
+    background: #fff3e0; color: #ef6c00;
+  }
+  .badge.add { background: #e8f5e9; color: #2e7d32; }
+  .hint {
+    display: flex; gap: 8px; align-items: flex-start;
+    font-size: 12px; color: #727272; background: #fafafa;
+    border-radius: 6px; padding: 10px 12px; line-height: 1.5;
+  }
+  .divider { height: 1px; background: #eeeeee; }
+  .empty { font-size: 14px; color: #727272; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#03a9f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"></path><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+    <h1>Git Sync</h1>
+    <span class="chip">Vorschau · Meilenstein 1</span>
+  </div>
+  <main>
+    <div class="card">
+      <div class="row">
+        <h2 class="grow">Repository-Status</h2>
+        <span id="branch" class="chip mono" hidden></span>
+      </div>
+      <div id="status" class="empty">Lade Status …</div>
+      <div id="details" hidden>
+        <div class="meta" id="remote"></div>
+        <div class="meta" id="lastcommit"></div>
+        <div class="meta" id="tracking"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="row"><h2 class="grow" style="font-size:14px">Lokale Änderungen</h2><span id="changecount" class="chip" hidden></span></div>
+      <div id="changes" class="empty">–</div>
+      <div class="hint">Dieser Meilenstein zeigt den Git-Zustand deiner Konfiguration nur an. Als Nächstes folgen: GitHub-Verbindung, Profile und der Sammel-PR-Workflow — main bleibt dabei die Quelle der Wahrheit, verändert nur durch den manuellen Merge des Sync-PRs.</div>
+    </div>
+  </main>
+<script>
+  async function load() {
+    const statusEl = document.getElementById('status');
+    try {
+      const res = await fetch('api/status');
+      const s = await res.json();
+      if (!s.exists) { statusEl.textContent = 'Konfigurationsverzeichnis nicht gefunden: ' + s.config_dir; return; }
+      if (!s.is_repo) { statusEl.textContent = 'Die Konfiguration (' + s.config_dir + ') ist noch kein Git-Repository. Die Einrichtung folgt im nächsten Meilenstein.'; return; }
+
+      statusEl.textContent = '';
+      statusEl.hidden = true;
+      const branch = document.getElementById('branch');
+      branch.textContent = s.branch || '?';
+      branch.hidden = false;
+      branch.classList.add('ok');
+
+      const details = document.getElementById('details');
+      details.hidden = false;
+      document.getElementById('remote').textContent = s.remote ? 'Remote: ' + s.remote : 'Kein Remote konfiguriert';
+      if (s.last_commit) {
+        document.getElementById('lastcommit').textContent =
+          'Letzter Commit: ' + s.last_commit.hash + ' — ' + s.last_commit.subject + ' (' + s.last_commit.when + ')';
+      }
+      if (s.ahead !== null && s.ahead !== undefined) {
+        document.getElementById('tracking').textContent = s.ahead + ' Commit(s) voraus · ' + s.behind + ' hinterher gegenüber Upstream';
+      }
+
+      const list = document.getElementById('changes');
+      const count = document.getElementById('changecount');
+      if (!s.changes.length) {
+        list.textContent = 'Keine lokalen Änderungen — alles committed.';
+      } else {
+        count.hidden = false;
+        count.classList.add('warn');
+        count.textContent = s.changes.length + ' Datei(en)';
+        list.classList.remove('empty');
+        list.innerHTML = '';
+        for (const c of s.changes) {
+          const row = document.createElement('div');
+          row.className = 'file';
+          const badge = document.createElement('span');
+          badge.className = 'badge' + (c.state === 'A' || c.state === '??' ? ' add' : '');
+          badge.textContent = c.state === '??' ? 'N' : c.state;
+          const path = document.createElement('span');
+          path.className = 'mono';
+          path.textContent = c.path;
+          row.appendChild(badge);
+          row.appendChild(path);
+          list.appendChild(row);
+        }
+      }
+    } catch (err) {
+      statusEl.textContent = 'Status konnte nicht geladen werden: ' + err;
+    }
+  }
+  load();
+</script>
+</body>
+</html>
