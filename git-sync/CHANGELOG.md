@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0
+
+- Settings view in the panel: auto-pull and poll interval, auto-commit and
+  quiet period, template for automatic commit messages ({dateien},
+  {anzahl}), notification toggles, profile change without re-running the
+  wizard, connection overview. Deliberately no push-mode switch — the
+  PR-only principle is not an option.
+- Persistent Home Assistant notifications (via the Supervisor API): on
+  conflict (cleared automatically once resolved) and a one-time reminder
+  when the collecting PR has been waiting for a merge longer than the
+  configured period.
+
 ## 0.3.0
 
 - Sync engine: the panel can now couple the configuration directory to the

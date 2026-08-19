@@ -143,6 +143,9 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#03a9f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"></path><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
     <h1>Git Sync</h1>
     <span id="userchip" class="chip hidden"></span>
+    <button id="gear" class="btn text hidden" style="padding:0 8px" title="Einstellungen">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#727272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"></path></svg>
+    </button>
   </div>
   <main>
     <div id="stepper" class="stepper hidden">
@@ -345,6 +348,111 @@
       </div>
       <div id="dasherr" class="error hidden"></div>
     </div>
+
+    <!-- Einstellungen -->
+    <div id="viewsettings" class="hidden" style="display:flex;flex-direction:column;gap:16px">
+      <div class="row">
+        <button class="btn text" id="settingsback">← Zurück</button>
+        <h2 class="grow" style="font-size:18px;font-weight:400;margin:0">Einstellungen</h2>
+      </div>
+      <div class="cols">
+        <div class="col">
+          <div class="card">
+            <h3>Synchronisation</h3>
+            <div class="row">
+              <div class="switch" id="set-autopull"><div class="track"></div><div class="thumb"></div></div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:14px">Änderungen aus main automatisch übernehmen</div>
+                <div class="meta" style="font-size:12px">Prüft im Hintergrund auf neue Commits</div>
+              </div>
+            </div>
+            <div>
+              <div class="label" style="margin-bottom:6px">Prüf-Intervall</div>
+              <select id="set-pollinterval">
+                <option value="30">Alle 30 Sekunden</option>
+                <option value="60">Jede Minute</option>
+                <option value="300">Alle 5 Minuten</option>
+              </select>
+            </div>
+            <div class="divider"></div>
+            <div class="row">
+              <div class="switch" id="set-autocommit"><div class="track"></div><div class="thumb"></div></div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:14px">Lokale Änderungen automatisch committen</div>
+                <div class="meta" style="font-size:12px">In den offenen Sync-PR, nach einer Ruhephase</div>
+              </div>
+            </div>
+            <div>
+              <div class="label" style="margin-bottom:6px">Ruhephase vor Auto-Commit</div>
+              <select id="set-commitdelay">
+                <option value="15">15 Sekunden</option>
+                <option value="120">2 Minuten</option>
+                <option value="600">10 Minuten</option>
+              </select>
+            </div>
+            <div class="hint">Committet wird immer in den offenen Sync-PR. main verändert sich ausschließlich durch dessen manuellen Merge — daher gibt es hier bewusst keinen Push-Modus.</div>
+          </div>
+          <div class="card">
+            <h3>Commits</h3>
+            <div>
+              <div class="label" style="margin-bottom:6px">Vorlage für automatische Commit-Nachrichten</div>
+              <input type="text" id="set-template" class="mono">
+              <div class="meta" style="margin-top:4px">Platzhalter: <span class="mono">{dateien}</span> · <span class="mono">{anzahl}</span></div>
+            </div>
+            <div class="row">
+              <span class="grow"></span>
+              <button class="btn text" id="set-template-save">Speichern</button>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card">
+            <h3>Benachrichtigungen</h3>
+            <div class="row">
+              <div class="switch" id="set-notifyconflict"><div class="track"></div><div class="thumb"></div></div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:14px">Bei Konflikt</div>
+                <div class="meta" style="font-size:12px">Dauerhafte Benachrichtigung in Home Assistant</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="switch" id="set-notifypr"><div class="track"></div><div class="thumb"></div></div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:14px">Wenn der Sync-PR auf einen Merge wartet</div>
+                <div class="meta" style="font-size:12px">Einmalige Erinnerung pro PR</div>
+              </div>
+            </div>
+            <div>
+              <div class="label" style="margin-bottom:6px">Erinnerung nach</div>
+              <select id="set-prhours">
+                <option value="6">6 Stunden</option>
+                <option value="24">24 Stunden</option>
+                <option value="72">3 Tagen</option>
+              </select>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Profil</h3>
+            <div class="meta" id="set-profile"></div>
+            <div class="row">
+              <span class="grow"></span>
+              <button class="btn text" id="set-changeprofile">Profil ändern</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Verbindung</h3>
+            <div class="meta" id="set-repo"></div>
+            <div class="meta">Sync-Branch: <span class="mono" id="set-syncbranch"></span> — änderbar durch Neueinrichtung</div>
+            <div class="divider"></div>
+            <div class="row">
+              <span class="grow"></span>
+              <button class="btn text danger" id="set-disconnect">Verbindung trennen</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="seterr" class="error hidden"></div>
+    </div>
   </main>
 <script>
 (function () {
@@ -416,8 +524,9 @@
   }
 
   function show(step, login) {
-    ['view1', 'view2', 'view3', 'viewdash'].forEach(function (id) { el(id).classList.add('hidden'); });
+    ['view1', 'view2', 'view3', 'viewdash', 'viewsettings'].forEach(function (id) { el(id).classList.add('hidden'); });
     el('stepper').classList.toggle('hidden', step === 0);
+    el('gear').classList.toggle('hidden', step !== 0);
     el('userchip').classList.toggle('hidden', !login);
     if (login) { el('userchip').textContent = login; el('userchip').classList.add('ok'); }
     [1, 2, 3].forEach(function (n) {
@@ -621,9 +730,11 @@
       : Promise.resolve();
     save.then(function () {
       return api('POST', 'api/setup/profile', { name: state.profile, groups: state.groups, apps_mode: state.apps_mode });
-    }).then(boot).catch(function (err) { showError('err3', err); });
+    }).then(function () { state.returnTo = null; boot(); })
+      .catch(function (err) { showError('err3', err); });
   });
   el('back3').addEventListener('click', function () {
+    if (state.returnTo === 'settings') { state.returnTo = null; showSettings(); return; }
     show(2);
     loadRepos();
   });
@@ -835,6 +946,70 @@
         .finally(function () { el('pullbtn').disabled = false; });
     };
   }
+
+  // ---- Einstellungen
+  function showSettings() {
+    ['view1', 'view2', 'view3', 'viewdash'].forEach(function (id) { el(id).classList.add('hidden'); });
+    el('stepper').classList.add('hidden');
+    el('gear').classList.add('hidden');
+    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+    api('GET', 'api/settings').then(function (data) {
+      var s = data.settings;
+      renderSwitch('set-autopull', s.auto_pull, { auto_pull: !s.auto_pull });
+      renderSwitch('set-autocommit', s.auto_commit, { auto_commit: !s.auto_commit });
+      renderSwitch('set-notifyconflict', s.notify_conflict, { notify_conflict: !s.notify_conflict });
+      renderSwitch('set-notifypr', s.notify_pr_waiting, { notify_pr_waiting: !s.notify_pr_waiting });
+      bindSelect('set-pollinterval', s.poll_interval, 'poll_interval');
+      bindSelect('set-commitdelay', s.auto_commit_delay, 'auto_commit_delay');
+      bindSelect('set-prhours', s.pr_waiting_hours, 'pr_waiting_hours');
+      el('set-template').value = s.commit_template;
+      el('set-profile').textContent = 'Aktives Profil: ' + (PROFILE_LABELS[data.profile.name] || data.profile.name) +
+        (data.profile.apps_mode === 'lockfile' ? ' · Anwendungen als Lockfile' : '');
+      el('set-repo').textContent = 'Repository: ' + data.repo.full_name + ' · Main-Branch: ' + data.repo.main_branch;
+      el('set-syncbranch').textContent = data.repo.sync_branch;
+      state.currentProfile = data.profile;
+      el('viewsettings').classList.remove('hidden');
+    }).catch(function () { boot(); });
+  }
+  function renderSwitch(id, on, patch) {
+    var sw = el(id);
+    sw.classList.toggle('on', !!on);
+    sw.onclick = function () {
+      api('POST', 'api/sync/settings', patch).then(showSettings)
+        .catch(function (err) { showError('seterr', err); });
+    };
+  }
+  function bindSelect(id, value, key) {
+    var select = el(id);
+    select.value = String(value);
+    if (!select.value) select.value = select.options[0].value;
+    select.onchange = function () {
+      var patch = {};
+      patch[key] = parseInt(select.value, 10);
+      api('POST', 'api/sync/settings', patch).catch(function (err) { showError('seterr', err); });
+    };
+  }
+  el('gear').addEventListener('click', showSettings);
+  el('settingsback').addEventListener('click', boot);
+  el('set-template-save').addEventListener('click', function () {
+    api('POST', 'api/sync/settings', { commit_template: el('set-template').value })
+      .then(showSettings).catch(function (err) { showError('seterr', err); });
+  });
+  el('set-changeprofile').addEventListener('click', function () {
+    state.returnTo = 'settings';
+    var current = state.currentProfile || {};
+    state.profile = current.name || 'ohne_anwendungen';
+    state.groups = Object.assign({}, current.groups || {});
+    state.apps_mode = current.apps_mode || 'lockfile';
+    ['viewdash', 'viewsettings', 'view1', 'view2'].forEach(function (id) { el(id).classList.add('hidden'); });
+    el('view3').classList.remove('hidden');
+    renderProfiles();
+  });
+  el('set-disconnect').addEventListener('click', function () {
+    if (window.confirm('Verbindung zu GitHub trennen? Repo- und Profil-Einstellungen werden zurückgesetzt.')) {
+      api('DELETE', 'api/setup/token').then(boot);
+    }
+  });
 
   // .gitignore-Editor im Dashboard
   el('editgitignore').addEventListener('click', function () {

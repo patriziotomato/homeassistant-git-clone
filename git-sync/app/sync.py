@@ -10,6 +10,7 @@ import time
 
 import gh
 import git_ops
+import ha
 import store
 
 LOG = logging.getLogger("git-sync")
@@ -19,7 +20,14 @@ DEFAULT_SETTINGS = {
     "auto_commit": True,
     "auto_commit_delay": 120,  # seconds of quiet before auto-committing
     "poll_interval": 60,
+    "commit_template": "Sync: {dateien}",
+    "notify_conflict": True,
+    "notify_pr_waiting": True,
+    "pr_waiting_hours": 24,
 }
+
+NOTIFY_CONFLICT_ID = "git_sync_conflict"
+NOTIFY_PR_ID = "git_sync_pr_waiting"
 
 PR_TITLE = "Sync: Lokale Änderungen aus Home Assistant"
 PR_BODY = (
@@ -72,38 +80,93 @@ def ensure_pr(token: str, repo: dict) -> dict | None:
 
 def commit_now(message: str | None) -> dict:
     global _first_dirty_at
-    token, repo, profile, _ = _ctx()
+    token, repo, profile, settings = _ctx()
     changes = git_ops.local_changes()
     if not changes and not message:
         return {"committed": None}
-    text = (message or "").strip() or auto_message(changes)
+    text = (message or "").strip() or auto_message(changes, settings)
     sha = git_ops.commit_and_push(token, repo, text, profile)
     _first_dirty_at = None
     pr = ensure_pr(token, repo)
     return {"committed": sha, "pr": pr}
 
 
-def auto_message(changes: list[dict]) -> str:
+def auto_message(changes: list[dict], settings: dict | None = None) -> str:
     paths = [c["path"] for c in changes]
+    if not paths:
+        return "Sync: Änderungen aus Home Assistant"
     head = ", ".join(paths[:2])
     more = f" (+{len(paths) - 2} weitere)" if len(paths) > 2 else ""
-    return f"Sync: {head}{more}" if paths else "Sync: Änderungen aus Home Assistant"
+    template = (settings or {}).get("commit_template") or DEFAULT_SETTINGS["commit_template"]
+    return template.replace("{dateien}", head + more).replace("{anzahl}", str(len(paths)))
+
+
+def _notify_conflict(active: bool, settings: dict) -> None:
+    """Edge-triggered persistent notification for the conflict state."""
+    state = store.load().get("notify_state", {})
+    was_active = bool(state.get("conflict"))
+    if active == was_active:
+        return
+    state["conflict"] = active
+    store.update(notify_state=state)
+    if active and settings.get("notify_conflict"):
+        ha.notify(
+            NOTIFY_CONFLICT_ID,
+            "Git Sync: Konflikt",
+            "Deine Änderungen und der Main-Branch widersprechen sich. "
+            "Bitte löse den Konflikt im Pull Request auf GitHub — "
+            "danach geht es automatisch weiter.",
+        )
+    elif not active:
+        ha.dismiss(NOTIFY_CONFLICT_ID)
+
+
+def _check_pr_reminder(token: str, repo: dict, settings: dict) -> None:
+    """Remind once per PR when it has been waiting for a merge too long."""
+    import datetime
+
+    state = store.load().get("notify_state", {})
+    pr = gh.find_open_pr(token, repo["full_name"], repo["sync_branch"])
+    if not pr:
+        if state.get("pr_reminded") is not None:
+            state["pr_reminded"] = None
+            store.update(notify_state=state)
+            ha.dismiss(NOTIFY_PR_ID)
+        return
+    if not settings.get("notify_pr_waiting") or state.get("pr_reminded") == pr["number"]:
+        return
+    created = pr.get("created_at")
+    if not created:
+        return
+    opened = datetime.datetime.fromisoformat(created.replace("Z", "+00:00"))
+    age_hours = (datetime.datetime.now(datetime.timezone.utc) - opened).total_seconds() / 3600
+    if age_hours >= settings.get("pr_waiting_hours", 24):
+        state["pr_reminded"] = pr["number"]
+        store.update(notify_state=state)
+        ha.notify(
+            NOTIFY_PR_ID,
+            "Git Sync: Sync-PR wartet auf Merge",
+            f"Pull Request #{pr['number']} sammelt seit über "
+            f"{settings.get('pr_waiting_hours', 24)} Stunden Änderungen. "
+            "Merge ihn im Git-Sync-Panel oder auf GitHub, um main zu aktualisieren.",
+        )
 
 
 def pull_now() -> dict:
     """Fetch and integrate origin/sync + origin/main into the local branch."""
-    token, repo, _, _ = _ctx()
+    token, repo, _, settings = _ctx()
     git_ops.fetch(token, repo)
     if git_ops.local_changes():
         commit_now(None)  # commit-first keeps merges clean
     result = git_ops.integrate(token, repo)
     if result == "ok":
         store.update(last_pull=int(time.time()))
+    _notify_conflict(result == "conflict", settings)
     return {"result": result}
 
 
 def merge_now() -> dict:
-    token, repo, _, _ = _ctx()
+    token, repo, _, settings = _ctx()
     if git_ops.local_changes():
         commit_now(None)
     pr = gh.find_open_pr(token, repo["full_name"], repo["sync_branch"])
@@ -111,13 +174,16 @@ def merge_now() -> dict:
         return {"merged": False, "error": "no_pr"}
     detail = gh.get_pr(token, repo["full_name"], pr["number"])
     if detail.get("mergeable") is False:
+        _notify_conflict(True, settings)
         return {"merged": False, "error": "conflict", "pr": detail}
     outcome = gh.merge_pr(token, repo["full_name"], pr["number"])
     if not outcome.get("merged"):
         return {"merged": False, "error": "merge_failed", "pr": detail}
     gh.delete_branch(token, repo["full_name"], repo["sync_branch"])
     git_ops.realign_after_merge(token, repo)
-    store.update(last_pull=int(time.time()))
+    store.update(last_pull=int(time.time()), notify_state={"conflict": False, "pr_reminded": None})
+    ha.dismiss(NOTIFY_CONFLICT_ID)
+    ha.dismiss(NOTIFY_PR_ID)
     return {"merged": True, "pr": detail}
 
 
@@ -164,10 +230,13 @@ def full_status() -> dict:
     return result
 
 
+_last_pr_check = 0.0
+
+
 async def poller():
     """Background loop: watch for local edits (auto-commit after a quiet
-    period) and for new commits on main (auto-pull)."""
-    global _first_dirty_at
+    period), new commits on main (auto-pull), and notification triggers."""
+    global _first_dirty_at, _last_pr_check
     while True:
         try:
             token, repo, profile, settings = _ctx()
@@ -186,8 +255,18 @@ async def poller():
                     behind = git_ops.incoming_count(repo)
                     dirty = bool(await asyncio.to_thread(git_ops.local_changes))
                     if behind and not dirty:
-                        await asyncio.to_thread(git_ops.integrate, token, repo)
-                        store.update(last_pull=int(time.time()))
+                        result = await asyncio.to_thread(git_ops.integrate, token, repo)
+                        if result == "ok":
+                            store.update(last_pull=int(time.time()))
+                        _notify_conflict(result == "conflict", settings)
+                # PR-Warte-Erinnerung: höchstens alle 5 Minuten, und nur wenn
+                # etwas zum Mergen bereitliegt oder eine Erinnerung aussteht.
+                if time.time() - _last_pr_check > 300:
+                    _last_pr_check = time.time()
+                    has_outgoing = bool(git_ops.outgoing_commits(repo, limit=1))
+                    reminded = store.load().get("notify_state", {}).get("pr_reminded") is not None
+                    if has_outgoing or reminded:
+                        await asyncio.to_thread(_check_pr_reminder, token, repo, settings)
             interval = settings["poll_interval"] if configured() else 30
         except Exception:  # never let the loop die
             LOG.exception("poller iteration failed")

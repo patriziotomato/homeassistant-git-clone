@@ -212,16 +212,32 @@ def sync_merge() -> dict:
         raise _github_error(err) from err
 
 
+@app.get("/api/settings")
+def settings_get() -> dict:
+    state = store.load()
+    return {
+        "settings": {**sync.DEFAULT_SETTINGS, **state.get("sync_settings", {})},
+        "repo": state.get("repo"),
+        "profile": state.get("profile"),
+        "github": {"login": state.get("github", {}).get("login")},
+    }
+
+
 @app.post("/api/sync/settings")
 def sync_settings(payload: dict = Body(...)) -> dict:
     state = store.load()
     settings = {**sync.DEFAULT_SETTINGS, **state.get("sync_settings", {})}
-    for key in ("auto_pull", "auto_commit"):
+    for key in ("auto_pull", "auto_commit", "notify_conflict", "notify_pr_waiting"):
         if key in payload:
             settings[key] = bool(payload[key])
     for key in ("auto_commit_delay", "poll_interval"):
         if key in payload:
             settings[key] = max(15, int(payload[key]))
+    if "pr_waiting_hours" in payload:
+        settings["pr_waiting_hours"] = min(168, max(1, int(payload["pr_waiting_hours"])))
+    if "commit_template" in payload:
+        template = str(payload["commit_template"]).strip()[:120]
+        settings["commit_template"] = template or sync.DEFAULT_SETTINGS["commit_template"]
     store.update(sync_settings=settings)
     return settings
 
