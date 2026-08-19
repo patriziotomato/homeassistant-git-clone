@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0
+
+- After changes from main land in the configuration, the app now runs the
+  configuration check (`ha core check`) automatically and shows the result
+  in a dashboard banner. A restart of Home Assistant (`ha core restart`)
+  can be triggered right there — always as an explicit, user-confirmed
+  action, and locked while the check reports an error.
+- Optional persistent notification when a restart is pending (on by
+  default, configurable).
+
 ## 0.4.1
 
 - Fix: "Jetzt übernehmen" (and background auto-pull) failed right after

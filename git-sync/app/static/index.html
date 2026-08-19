@@ -246,6 +246,24 @@
         </div>
       </div>
 
+      <!-- Neustart-Banner -->
+      <div id="restartbanner" class="hidden">
+        <div class="card" style="gap:10px">
+          <div class="row">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0277bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.5 15a9 9 0 1 1-2-9.4L23 10"></path></svg>
+            <h3 class="grow" id="restarttitle">Änderungen übernommen — Neustart ausstehend</h3>
+            <span id="checkchip" class="chip"></span>
+          </div>
+          <div class="meta" id="restartmeta"></div>
+          <div id="checkerror" class="error mono hidden" style="white-space:pre-wrap"></div>
+          <div class="row">
+            <span class="grow"></span>
+            <button class="btn text" id="recheckbtn">Prüfung wiederholen</button>
+            <button class="btn" id="restartbtn">Home Assistant neu starten</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Konflikt-Banner -->
       <div id="conflictbanner" class="conflict hidden">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef6c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="M12 3l10 18H2L12 3z"></path><path d="M12 10v5"></path><path d="M12 18.5h.01"></path></svg>
@@ -429,6 +447,13 @@
                 <option value="24">24 Stunden</option>
                 <option value="72">3 Tagen</option>
               </select>
+            </div>
+            <div class="row">
+              <div class="switch" id="set-notifyrestart"><div class="track"></div><div class="thumb"></div></div>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-size:14px">Wenn ein Neustart aussteht</div>
+                <div class="meta" style="font-size:12px">Nach übernommenen Änderungen aus main</div>
+              </div>
             </div>
           </div>
           <div class="card">
@@ -763,6 +788,7 @@
       renderChanges(s);
       renderPr(s);
       renderIncoming(s);
+      renderCore(s);
     }).catch(function (err) { showError('dasherr', err); });
   }
 
@@ -959,6 +985,7 @@
       renderSwitch('set-autocommit', s.auto_commit, { auto_commit: !s.auto_commit });
       renderSwitch('set-notifyconflict', s.notify_conflict, { notify_conflict: !s.notify_conflict });
       renderSwitch('set-notifypr', s.notify_pr_waiting, { notify_pr_waiting: !s.notify_pr_waiting });
+      renderSwitch('set-notifyrestart', s.notify_restart, { notify_restart: !s.notify_restart });
       bindSelect('set-pollinterval', s.poll_interval, 'poll_interval');
       bindSelect('set-commitdelay', s.auto_commit_delay, 'auto_commit_delay');
       bindSelect('set-prhours', s.pr_waiting_hours, 'pr_waiting_hours');
@@ -1010,6 +1037,53 @@
       api('DELETE', 'api/setup/token').then(boot);
     }
   });
+
+  function renderCore(s) {
+    var core = s.core;
+    var banner = el('restartbanner');
+    var pending = !!(core && core.restart_pending);
+    banner.classList.toggle('hidden', !pending);
+    if (!pending) return;
+    var check = core.check || {};
+    var chip = el('checkchip');
+    var errbox = el('checkerror');
+    var restart = el('restartbtn');
+    errbox.classList.add('hidden');
+    if (check.result === 'ok') {
+      chip.className = 'chip ok';
+      chip.textContent = 'Prüfung OK';
+      el('restartmeta').textContent = 'Änderungen aus main sind in der Konfiguration angekommen und die Konfigurationsprüfung (ha core check) war erfolgreich. Ein Neustart aktiviert sie — er startet erst nach deiner Bestätigung.';
+      restart.disabled = false;
+    } else if (check.result === 'error') {
+      chip.className = 'chip err';
+      chip.textContent = 'Prüfung fehlgeschlagen';
+      el('restartmeta').textContent = 'Änderungen aus main sind angekommen, aber die Konfigurationsprüfung meldet einen Fehler. Bitte erst korrigieren (auf GitHub oder lokal) — der Neustart bleibt so lange gesperrt.';
+      errbox.textContent = check.message || '';
+      errbox.classList.remove('hidden');
+      restart.disabled = true;
+    } else {
+      chip.className = 'chip';
+      chip.textContent = 'Prüfung nicht verfügbar';
+      el('restartmeta').textContent = 'Die Konfigurationsprüfung war nicht erreichbar. Du kannst trotzdem neu starten — auf eigenes Risiko.';
+      restart.disabled = false;
+    }
+    el('recheckbtn').onclick = function () {
+      el('recheckbtn').disabled = true;
+      api('POST', 'api/sync/check')
+        .then(loadSync)
+        .catch(function (err) { showError('dasherr', err); })
+        .finally(function () { el('recheckbtn').disabled = false; });
+    };
+    restart.onclick = function () {
+      if (!window.confirm('Home Assistant jetzt neu starten? Automationen und Oberfläche sind dabei kurz nicht verfügbar.')) return;
+      restart.disabled = true;
+      api('POST', 'api/sync/restart')
+        .then(function () {
+          el('restartmeta').textContent = 'Neustart läuft — Home Assistant ist gleich wieder da.';
+        })
+        .catch(function (err) { showError('dasherr', err); restart.disabled = false; });
+    };
+  }
 
   // .gitignore-Editor im Dashboard
   el('editgitignore').addEventListener('click', function () {

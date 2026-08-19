@@ -229,11 +229,25 @@ def settings_get() -> dict:
     }
 
 
+@app.post("/api/sync/check")
+def sync_check() -> dict:
+    return sync.check_core()
+
+
+@app.post("/api/sync/restart")
+def sync_restart() -> dict:
+    result = sync.restart_core()
+    if not result.get("ok"):
+        raise HTTPException(status_code=502, detail="restart_failed")
+    return result
+
+
 @app.post("/api/sync/settings")
 def sync_settings(payload: dict = Body(...)) -> dict:
     state = store.load()
     settings = {**sync.DEFAULT_SETTINGS, **state.get("sync_settings", {})}
-    for key in ("auto_pull", "auto_commit", "notify_conflict", "notify_pr_waiting"):
+    for key in ("auto_pull", "auto_commit", "notify_conflict", "notify_pr_waiting",
+                "notify_restart"):
         if key in payload:
             settings[key] = bool(payload[key])
     for key in ("auto_commit_delay", "poll_interval"):

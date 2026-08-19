@@ -343,6 +343,16 @@ def realign_after_merge(token: str, repo_cfg: dict) -> None:
                 _git("stash", "pop")
 
 
+def head_sha() -> str | None:
+    code, out, _ = _git("rev-parse", "HEAD")
+    return out if code == 0 else None
+
+
+def tree_hash() -> str | None:
+    code, out, _ = _git("rev-parse", "HEAD^{tree}")
+    return out if code == 0 else None
+
+
 def last_commit() -> dict | None:
     code, out, _ = _git("log", "-1", "--format=%h␟%s␟%cr")
     if code != 0 or not out:
