@@ -134,6 +134,7 @@ def _pr_fields(data: dict) -> dict:
         "mergeable": data.get("mergeable"),
         "mergeable_state": data.get("mergeable_state"),
         "commits": data.get("commits"),
+        "created_at": data.get("created_at"),
     }
 
 

@@ -16,11 +16,12 @@ Couples your Home Assistant configuration to a GitHub repository.
 
 ## Current state
 
-This is an early preview (milestone 3): setup wizard plus the working sync
+This is an early preview (milestone 4): setup wizard, the working sync
 engine — coupling the configuration directory, auto-committing local edits
 onto the sync branch, one collecting pull request, background auto-pull of
-main, and merging the PR from the panel. Conflicts lock the merge and link
-to the pull request on GitHub.
+main, merging the PR from the panel (conflicts lock the merge and link to
+the pull request on GitHub) — plus a settings view and persistent Home
+Assistant notifications on conflicts and long-waiting sync PRs.
 
 ## Sync profiles
 
