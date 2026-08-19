@@ -229,6 +229,18 @@ def settings_get() -> dict:
     }
 
 
+@app.post("/api/sync/ensure-pr")
+def sync_ensure_pr() -> dict:
+    if not sync.configured():
+        raise HTTPException(status_code=409, detail="not_configured")
+    try:
+        return sync.ensure_pr_now()
+    except git_ops.GitError as err:
+        raise _git_error(err) from err
+    except gh.GitHubError as err:
+        raise _github_error(err) from err
+
+
 @app.post("/api/sync/check")
 def sync_check() -> dict:
     return sync.check_core()

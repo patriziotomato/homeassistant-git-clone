@@ -89,8 +89,20 @@ def commit_now(message: str | None) -> dict:
     text = (message or "").strip() or auto_message(changes, settings)
     sha = git_ops.commit_and_push(token, repo, text, profile)
     _first_dirty_at = None
-    pr = ensure_pr(token, repo)
+    # The commit is safely pushed at this point — a failing PR creation must
+    # not fail the whole call. The poller and the dashboard retry it.
+    try:
+        pr = ensure_pr(token, repo)
+    except gh.GitHubError as err:
+        LOG.warning("Sync-PR konnte nicht angelegt werden (%s): %s", err.kind, err.detail or "-")
+        return {"committed": sha, "pr": None, "pr_error": err.kind}
     return {"committed": sha, "pr": pr}
+
+
+def ensure_pr_now() -> dict:
+    """Create the collecting PR on demand (dashboard action / self-heal)."""
+    token, repo, _, _ = _ctx()
+    return {"pr": ensure_pr(token, repo)}
 
 
 def auto_message(changes: list[dict], settings: dict | None = None) -> str:
@@ -324,12 +336,20 @@ async def poller():
                             if git_ops.head_sha() != before:
                                 await asyncio.to_thread(_after_apply, settings)
                         _notify_conflict(result == "conflict", settings)
-                # PR-Warte-Erinnerung: höchstens alle 5 Minuten, und nur wenn
-                # etwas zum Mergen bereitliegt oder eine Erinnerung aussteht.
+                # PR-Pflege: höchstens alle 5 Minuten — fehlt der Sammel-PR
+                # trotz bereitliegender Commits (z. B. weil die Erstellung
+                # einmal fehlschlug), wird er hier nachgeholt; danach die
+                # Warte-Erinnerung.
                 if time.time() - _last_pr_check > 300:
                     _last_pr_check = time.time()
                     has_outgoing = bool(git_ops.outgoing_commits(repo, limit=1))
                     reminded = store.load().get("notify_state", {}).get("pr_reminded") is not None
+                    if has_outgoing:
+                        try:
+                            await asyncio.to_thread(ensure_pr, token, repo)
+                        except gh.GitHubError as err:
+                            LOG.warning("Sammel-PR fehlt und konnte nicht angelegt werden (%s): %s",
+                                        err.kind, err.detail or "-")
                     if has_outgoing or reminded:
                         await asyncio.to_thread(_check_pr_reminder, token, repo, settings)
             interval = settings["poll_interval"] if configured() else 30
