@@ -1,23 +1,171 @@
 """Git Sync — Home Assistant app backend.
 
-Milestone 1: read-only status API over the Home Assistant configuration
-directory. The directory is mounted at /homeassistant inside the app
-container (map: homeassistant_config); CONFIG_DIR overrides it for local
-development.
+Milestone 2: setup wizard (GitHub token, repository & branches, sync
+profile) on top of the milestone-1 read-only git status API.
+
+The Home Assistant configuration directory is mounted at /homeassistant
+inside the app container (map: homeassistant_config); CONFIG_DIR overrides
+it for local development.
 """
 
 import os
 import subprocess
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Body, FastAPI, HTTPException
 from fastapi.responses import FileResponse
+
+import gh
+import store
 
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/homeassistant")
 STATIC_DIR = Path(__file__).parent / "static"
 
 app = FastAPI(title="Git Sync", docs_url=None, redoc_url=None)
 
+# Sync profiles: which file groups end up in git. "apps_mode" is the
+# custom_components/ handling — "lockfile" records names & versions only.
+GROUP_KEYS = ["core", "blueprints", "esphome", "themes_www", "apps", "ui_export"]
+PROFILES = {
+    "komplett": {
+        "groups": {"core": True, "blueprints": True, "esphome": True,
+                   "themes_www": True, "apps": True, "ui_export": False},
+        "apps_mode": "full",
+    },
+    "ohne_anwendungen": {
+        "groups": {"core": True, "blueprints": True, "esphome": True,
+                   "themes_www": True, "apps": True, "ui_export": False},
+        "apps_mode": "lockfile",
+    },
+    "nur_kern": {
+        "groups": {"core": True, "blueprints": False, "esphome": False,
+                   "themes_www": False, "apps": False, "ui_export": False},
+        "apps_mode": "lockfile",
+    },
+}
+
+
+def _github_error(err: gh.GitHubError) -> HTTPException:
+    status = {"invalid_token": 401, "forbidden": 403, "network": 502}.get(err.kind, 502)
+    return HTTPException(status_code=status, detail=err.kind)
+
+
+def _token() -> str:
+    token = store.load().get("github", {}).get("token")
+    if not token:
+        raise HTTPException(status_code=409, detail="not_connected")
+    return token
+
+
+# --------------------------------------------------------------- setup state
+
+@app.get("/api/setup")
+def setup_state() -> dict:
+    """Wizard state — never returns the token itself."""
+    state = store.load()
+    github = state.get("github", {})
+    repo = state.get("repo")
+    profile = state.get("profile")
+    if not github.get("token"):
+        step = 1
+    elif not repo:
+        step = 2
+    elif not profile:
+        step = 3
+    else:
+        step = 0  # configured
+    return {
+        "configured": step == 0,
+        "step": step,
+        "github": {"connected": bool(github.get("token")), "login": github.get("login")},
+        "repo": repo,
+        "profile": profile,
+    }
+
+
+@app.post("/api/setup/token")
+def set_token(payload: dict = Body(...)) -> dict:
+    token = (payload.get("token") or "").strip()
+    if not token:
+        raise HTTPException(status_code=400, detail="missing_token")
+    try:
+        user = gh.get_user(token)
+    except gh.GitHubError as err:
+        raise _github_error(err) from err
+    store.update(github={"token": token, "login": user["login"]})
+    return {"login": user["login"]}
+
+
+@app.delete("/api/setup/token")
+def disconnect() -> dict:
+    store.update(github=None, repo=None, profile=None)
+    return {"ok": True}
+
+
+@app.post("/api/setup/repo")
+def set_repo(payload: dict = Body(...)) -> dict:
+    _token()
+    full_name = (payload.get("full_name") or "").strip()
+    main_branch = (payload.get("main_branch") or "main").strip()
+    sync_branch = (payload.get("sync_branch") or "ha-sync").strip()
+    if not full_name or "/" not in full_name:
+        raise HTTPException(status_code=400, detail="invalid_repo")
+    if main_branch == sync_branch:
+        raise HTTPException(status_code=400, detail="branches_equal")
+    repo = {"full_name": full_name, "main_branch": main_branch, "sync_branch": sync_branch}
+    store.update(repo=repo)
+    return repo
+
+
+@app.post("/api/setup/profile")
+def set_profile(payload: dict = Body(...)) -> dict:
+    _token()
+    name = payload.get("name")
+    if name in PROFILES:
+        profile = {"name": name, **PROFILES[name]}
+    elif name == "benutzerdefiniert":
+        groups = payload.get("groups") or {}
+        profile = {
+            "name": name,
+            "groups": {key: bool(groups.get(key)) for key in GROUP_KEYS},
+            "apps_mode": payload.get("apps_mode", "lockfile"),
+        }
+    else:
+        raise HTTPException(status_code=400, detail="unknown_profile")
+    store.update(profile=profile)
+    return profile
+
+
+# ------------------------------------------------------------- GitHub proxy
+
+@app.get("/api/github/repos")
+def github_repos() -> list[dict]:
+    try:
+        return gh.list_repos(_token())
+    except gh.GitHubError as err:
+        raise _github_error(err) from err
+
+
+@app.post("/api/github/repos")
+def github_create_repo(payload: dict = Body(...)) -> dict:
+    name = (payload.get("name") or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="missing_name")
+    try:
+        return gh.create_repo(_token(), name)
+    except gh.GitHubError as err:
+        raise _github_error(err) from err
+
+
+@app.get("/api/github/branches")
+def github_branches(repo: str) -> list[str]:
+    try:
+        return gh.list_branches(_token(), repo)
+    except gh.GitHubError as err:
+        raise _github_error(err) from err
+
+
+# ---------------------------------------------------------------- git status
 
 def _git(*args: str) -> tuple[int, str]:
     """Run git against CONFIG_DIR, returning (exit code, stripped stdout)."""

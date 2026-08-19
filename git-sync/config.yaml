@@ -1,5 +1,5 @@
 name: Git Sync
-version: 0.1.0
+version: 0.2.0
 slug: git_sync
 description: Couple your Home Assistant configuration to a GitHub repository — main is the source of truth, local changes collect in a single pull request.
 url: https://github.com/patriziotomato/homeassistant-git-clone
