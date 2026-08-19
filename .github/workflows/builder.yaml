@@ -26,4 +26,6 @@ jobs:
           args: |
             --test \
             --${{ matrix.arch }} \
-            --target git-sync
+            --target git-sync \
+            --image {arch}-git-sync \
+            --docker-hub ghcr.io/patriziotomato
