@@ -48,6 +48,30 @@ Early development.
       manual merge from the panel, conflict deep links
 - [ ] Publishing: pre-built multi-arch images, public app repository
 
+## Distribution
+
+Git Sync ships as a **Home Assistant app repository** (an add-on repository),
+not through HACS. HACS installs things that live inside the configuration
+directory — integrations, dashboard plugins, themes, templates — and has no
+category for apps at all; those are managed by the Supervisor. This is not an
+oversight to be fixed later, it follows from what the app needs: a `git`
+binary, a private volume that holds the GitHub token outside the configuration
+directory, its own process for long-running fetches and pushes, and ingress for
+the panel. An in-process integration would give up every one of those.
+
+Two consequences worth knowing before opening an issue about them:
+
+- **Installation means adding a repository URL** to the app store, not finding
+  Git Sync in a catalogue. Home Assistant has no central directory of apps.
+- **Home Assistant OS or Supervised is required.** Container and Core installs
+  have no Supervisor and therefore cannot run apps.
+
+Reaching those installs would mean re-implementing the whole git engine as a
+custom integration — the `git` binary cannot be assumed to exist inside the
+Core container, so it would have to become a pure-Python implementation. That
+trade is not planned. If it is ever revisited, it belongs in a separate project
+rather than in a rewrite of this one.
+
 ## Installing (for testing)
 
 Until pre-built images are published, install it as a **local app**:
