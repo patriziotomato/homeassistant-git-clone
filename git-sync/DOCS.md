@@ -20,9 +20,8 @@ Leave GitHub's repository setting **Settings → General → "Automatically
 delete head branches"** switched off for the coupled repository. Git Sync
 manages the lifetime of the sync branch (`ha-sync`) itself: it removes the
 branch after a merge triggered from the panel and recreates it with the next
-commit. If GitHub deletes it on its own — for example right after you merge
-the pull request on GitHub — the panel keeps working from its last known
-state of that branch until the next commit recreates it.
+commit. Leaving GitHub's own automation switched off keeps that lifecycle in
+one place — the app stays the only thing creating and removing the branch.
 
 ## Current state
 

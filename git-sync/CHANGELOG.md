@@ -1,12 +1,28 @@
 # Changelog
 
-## 0.5.2
+## 0.6.1
 
 - The dashboard card "Offener Sync-PR" is now called "Änderungen aus HA",
   making it clearer that it collects the changes made in Home Assistant.
 - The setup wizard and the documentation now point out that GitHub's
   repository setting "Automatically delete head branches" should stay
   switched off — Git Sync manages the lifetime of the sync branch itself.
+
+## 0.6.0
+
+- Commits listed on the dashboard (in the collecting pull request and under
+  incoming changes) now link to the commit on GitHub, so the actual file
+  changes are one click away.
+- Fix: after the collecting pull request was merged, the next pull kept
+  creating empty merge commits that re-imported the already-merged history —
+  resurrecting the just-deleted sync branch on GitHub and listing old
+  commits in the next pull request. Merges that would bring no changes are
+  now skipped entirely and the sync branch restarts cleanly from main.
+- The restart reminder and the automatic configuration check now only
+  trigger when a pull actually changed files, not on history-only updates.
+- Fix: the first file in the local-changes list (and in auto-generated
+  commit messages) lost the first character of its name when it was a
+  modified file — e.g. "ustom_components/…" instead of "custom_components/…".
 
 ## 0.5.1
 
