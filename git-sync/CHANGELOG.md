@@ -1,14 +1,5 @@
 # Changelog
 
-## 0.7.1
-
-- The dashboard card "Offener Sync-PR" / "Open sync PR" is now called
-  "Änderungen aus HA" / "Changes from HA", making it clearer that it
-  collects the changes made in Home Assistant.
-- The setup wizard and the documentation now point out that GitHub's
-  repository setting "Automatically delete head branches" should stay
-  switched off — Git Sync manages the lifetime of the sync branch itself.
-
 ## 0.7.0
 
 - The panel now speaks English as well as German. On first start it follows
@@ -21,6 +12,13 @@
   as it is untouched ({dateien}/{anzahl} in German, {files}/{count} in
   English). Both spellings keep working, so a template you wrote yourself
   survives a language switch.
+- The dashboard card collecting local changes is now called
+  "Änderungen aus HA" / "Changes from HA" (previously "Offener
+  Sync-PR"), making it clearer that it holds the changes made in
+  Home Assistant.
+- The setup wizard and the documentation now point out that GitHub's
+  repository setting "Automatically delete head branches" should stay
+  switched off — Git Sync manages the lifetime of the sync branch itself.
 
 ## 0.6.0
 
