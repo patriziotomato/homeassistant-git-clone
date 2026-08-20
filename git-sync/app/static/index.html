@@ -135,6 +135,7 @@
   .switch.on .thumb { left: 16px; background: #03a9f4; }
   .commit { display: flex; align-items: center; gap: 10px; font-size: 13px; }
   .commit .when { color: #9e9e9e; white-space: nowrap; }
+  .commit a:hover { text-decoration: underline; }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -594,6 +595,7 @@
       'changes.commit': 'Jetzt committen',
       'changes.autocommit.in': 'Auto-Commit in ~{minutes} Min.',
       'changes.autocommit.off': 'Auto-Commit ist aus.',
+      'commit.link': 'Commit {hash} auf GitHub ansehen',
       'pr.heading': 'Offener Sync-PR',
       'pr.empty': 'Kein offener Sync-PR — es liegt nichts zum Mergen bereit.',
       'pr.missing': 'Es liegen Commits auf dem Sync-Branch bereit, aber der Sammel-PR fehlt noch (die Erstellung wird automatisch nachgeholt — oder direkt hier):',
@@ -760,6 +762,7 @@
       'changes.commit': 'Commit now',
       'changes.autocommit.in': 'Auto-commit in ~{minutes} min.',
       'changes.autocommit.off': 'Auto-commit is off.',
+      'commit.link': 'View commit {hash} on GitHub',
       'pr.heading': 'Open sync PR',
       'pr.empty': 'No open sync PR — nothing is waiting to be merged.',
       'pr.missing': 'Commits are waiting on the sync branch, but the collecting PR is still missing (creation is retried automatically — or do it right here):',
@@ -1308,6 +1311,24 @@
     };
   }
 
+  function commitRow(s, c) {
+    var row = document.createElement('div');
+    row.className = 'commit';
+    var subject = document.createElement('a');
+    subject.className = 'grow';
+    subject.textContent = c.subject;
+    subject.href = 'https://github.com/' + s.repo.full_name + '/commit/' + c.hash;
+    subject.target = '_blank';
+    subject.rel = 'noopener';
+    subject.title = t('commit.link', { hash: c.hash });
+    var when = document.createElement('span');
+    when.className = 'when';
+    when.textContent = c.when;
+    row.appendChild(subject);
+    row.appendChild(when);
+    return row;
+  }
+
   function renderPr(s) {
     var pr = s.pr;
     var waiting = !pr && (s.outgoing || []).length > 0;
@@ -1338,17 +1359,7 @@
     var wrap = el('prcommits');
     wrap.innerHTML = '';
     (s.outgoing || []).slice(0, 5).forEach(function (c) {
-      var row = document.createElement('div');
-      row.className = 'commit';
-      var subject = document.createElement('span');
-      subject.className = 'grow';
-      subject.textContent = c.subject;
-      var when = document.createElement('span');
-      when.className = 'when';
-      when.textContent = c.when;
-      row.appendChild(subject);
-      row.appendChild(when);
-      wrap.appendChild(row);
+      wrap.appendChild(commitRow(s, c));
     });
     var banner = el('conflictbanner');
     banner.classList.toggle('hidden', !conflict);
@@ -1384,17 +1395,7 @@
     list.classList.remove('empty');
     list.innerHTML = '';
     (s.incoming || []).forEach(function (c) {
-      var row = document.createElement('div');
-      row.className = 'commit';
-      var subject = document.createElement('span');
-      subject.className = 'grow';
-      subject.textContent = c.subject;
-      var when = document.createElement('span');
-      when.className = 'when';
-      when.textContent = c.when;
-      row.appendChild(subject);
-      row.appendChild(when);
-      list.appendChild(row);
+      list.appendChild(commitRow(s, c));
     });
     el('pullbtn').onclick = function () {
       el('pullbtn').disabled = true;

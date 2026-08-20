@@ -231,11 +231,13 @@ def pull_now() -> dict:
     git_ops.fetch(token, repo)
     if git_ops.local_changes():
         commit_now(None)  # commit-first keeps merges clean
-    before = git_ops.head_sha()
+    before = git_ops.tree_hash()
     result = git_ops.integrate(token, repo)
     if result == "ok":
         store.update(last_pull=int(time.time()))
-        if git_ops.head_sha() != before:
+        # Tree comparison, not head: history-only updates (skipped empty
+        # merges, realigned branch) change no files and need no restart.
+        if git_ops.tree_hash() != before:
             _after_apply(settings)
     _notify_conflict(result == "conflict", settings)
     return {"result": result}
@@ -337,11 +339,11 @@ async def poller():
                     behind = git_ops.incoming_count(repo)
                     dirty = bool(await asyncio.to_thread(git_ops.local_changes))
                     if behind and not dirty:
-                        before = git_ops.head_sha()
+                        before = git_ops.tree_hash()
                         result = await asyncio.to_thread(git_ops.integrate, token, repo)
                         if result == "ok":
                             store.update(last_pull=int(time.time()))
-                            if git_ops.head_sha() != before:
+                            if git_ops.tree_hash() != before:
                                 await asyncio.to_thread(_after_apply, settings)
                         _notify_conflict(result == "conflict", settings)
                 # PR-Pflege: höchstens alle 5 Minuten — fehlt der Sammel-PR
