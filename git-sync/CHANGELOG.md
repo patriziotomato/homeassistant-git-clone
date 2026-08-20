@@ -4,6 +4,9 @@
 
 - The dashboard card "Offener Sync-PR" is now called "Änderungen aus HA",
   making it clearer that it collects the changes made in Home Assistant.
+- The setup wizard and the documentation now point out that GitHub's
+  repository setting "Automatically delete head branches" should stay
+  switched off — Git Sync manages the lifetime of the sync branch itself.
 
 ## 0.5.1
 

@@ -21,6 +21,11 @@ conflicts instead of resolving them inside Home Assistant:
    link from the app. There is deliberately no diff/merge UI inside
    Home Assistant.
 
+On the GitHub side, leave the repository setting **"Automatically delete head
+branches"** switched off. Git Sync manages the lifetime of the sync branch
+itself — it removes the branch after a merge from the panel and recreates it
+with the next commit.
+
 Sync **profiles** control which file groups are versioned — e.g.
 "Without applications" keeps `custom_components/` out of the repo and
 records a version lockfile instead. Secrets (`secrets.yaml`, `.storage/`,
