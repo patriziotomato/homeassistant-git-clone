@@ -28,6 +28,8 @@
   .card h2 { font-size: 18px; font-weight: 400; margin: 0; }
   .card h3 { font-size: 16px; font-weight: 500; margin: 0; }
   .row { display: flex; align-items: center; gap: 10px; }
+  /* Button-Zeilen dürfen umbrechen, sonst laufen lange Beschriftungen aus der Karte / long labels overflow the card */
+  .row.actions { flex-wrap: wrap; justify-content: flex-end; }
   .grow { flex-grow: 1; }
   .cols { display: flex; gap: 16px; align-items: flex-start; }
   .col { display: flex; flex-direction: column; gap: 16px; flex-grow: 1; flex-basis: 0; min-width: 0; }
@@ -151,7 +153,6 @@
     .cols { flex-direction: column; align-items: stretch; }
     .col { flex-basis: auto; }
     .row { flex-wrap: wrap; }
-    .row.actions { justify-content: flex-end; }
     .row > .chip { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
     .btn { white-space: normal; height: auto; min-height: 44px; padding: 8px 16px; }
     /* 16px verhindert den Auto-Zoom von iOS beim Fokussieren / stops iOS focus zoom */
