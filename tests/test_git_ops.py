@@ -201,6 +201,15 @@ check("lingering remote branch reset to main",
 check("no outgoing after branch reset", git_ops.outgoing_commits(REPO) == [],
       str(git_ops.outgoing_commits(REPO)))
 
+# 8) Regression: an unstaged modification is reported as " M <path>" — the
+#    leading space must not be stripped away, or the parser eats the first
+#    character of the path ("ustom_components/…" in commit messages).
+(CONFIG / "automations.yaml").write_text("- id: unstaged_edit\n")
+entries = git_ops.local_changes()
+check("unstaged modification path intact",
+      entries == [{"state": "M", "path": "automations.yaml"}], str(entries))
+git_ops.commit_and_push(None, REPO, "Sync: automations.yaml", PROFILE_OA)
+
 print()
 print("FAILED: " + (", ".join(FAILED) if FAILED else "none"))
 sys.exit(1 if FAILED else 0)

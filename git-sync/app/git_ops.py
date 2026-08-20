@@ -78,7 +78,8 @@ def _auth_args(token: str | None) -> list[str]:
     ]
 
 
-def _git(*args: str, token: str | None = None, timeout: int = 120) -> tuple[int, str, str]:
+def _git(*args: str, token: str | None = None, timeout: int = 120,
+         strip: bool = True) -> tuple[int, str, str]:
     cmd = ["git", "-C", CONFIG_DIR, "-c", f"safe.directory={CONFIG_DIR}"]
     cmd += _auth_args(token)
     cmd += list(args)
@@ -86,7 +87,7 @@ def _git(*args: str, token: str | None = None, timeout: int = 120) -> tuple[int,
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     except (OSError, subprocess.TimeoutExpired) as err:
         return 1, "", str(err)
-    return result.returncode, result.stdout.strip(), result.stderr.strip()
+    return result.returncode, result.stdout.strip() if strip else result.stdout, result.stderr.strip()
 
 
 def _must(*args: str, token: str | None = None, timeout: int = 120) -> str:
@@ -239,10 +240,14 @@ def write_lockfile(profile: dict) -> bool:
 
 
 def local_changes() -> list[dict]:
-    code, out, _ = _git("status", "--porcelain")
-    if code != 0 or not out:
+    # Unstripped: an unstaged modification (" M …") in the first line starts
+    # with a space — stripping it would shift the columns and eat the first
+    # character of the path.
+    code, out, _ = _git("status", "--porcelain", strip=False)
+    if code != 0:
         return []
-    return [{"state": line[:2].strip() or "??", "path": line[3:]} for line in out.splitlines()]
+    return [{"state": line[:2].strip() or "??", "path": line[3:]}
+            for line in out.splitlines() if line]
 
 
 def commit_and_push(token: str, repo_cfg: dict, message: str, profile: dict) -> str | None:

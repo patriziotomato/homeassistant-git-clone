@@ -12,6 +12,9 @@
   now skipped entirely and the sync branch restarts cleanly from main.
 - The restart reminder and the automatic configuration check now only
   trigger when a pull actually changed files, not on history-only updates.
+- Fix: the first file in the local-changes list (and in auto-generated
+  commit messages) lost the first character of its name when it was a
+  modified file — e.g. "ustom_components/…" instead of "custom_components/…".
 
 ## 0.5.1
 
