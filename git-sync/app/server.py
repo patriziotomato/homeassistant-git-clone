@@ -213,9 +213,9 @@ def sync_pull() -> dict:
 
 
 @app.post("/api/sync/merge")
-def sync_merge() -> dict:
+def sync_merge(payload: dict = Body(default={})) -> dict:
     try:
-        return sync.merge_now()
+        return sync.merge_now(payload.get("message"))
     except git_ops.GitError as err:
         raise _git_error(err) from err
     except gh.GitHubError as err:

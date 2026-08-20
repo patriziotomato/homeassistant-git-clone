@@ -96,6 +96,9 @@ remote_branches = sh("git", "-C", str(BARE), "branch")
 check("ha-sync on remote", "ha-sync" in remote_branches, remote_branches)
 check("tree clean after commit", git_ops.local_changes() == [])
 check("outgoing commits > 0", len(git_ops.outgoing_commits(REPO)) == 1)
+files = set(git_ops.outgoing_files(REPO))
+check("outgoing files cover the PR diff",
+      {"configuration.yaml", "automations.yaml", git_ops.LOCKFILE} <= files, str(files))
 
 # 3) main advances remotely -> incoming + clean integrate
 sh("git", "-C", str(WORK), "pull", "origin", "main")

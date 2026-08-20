@@ -126,6 +126,13 @@ def auto_message(changes: list[dict], settings: dict | None = None) -> str:
             .replace("{anzahl}", count).replace("{count}", count))
 
 
+def merge_suggested_message(pr_number: int, repo: dict, settings: dict) -> str:
+    """Prefill for the merge-commit text: the PR's whole diff summarized
+    like an automatic commit message, plus the PR reference GitHub links."""
+    files = [{"path": path} for path in git_ops.outgoing_files(repo)]
+    return f"{auto_message(files, settings)} (#{pr_number})"
+
+
 def _notify_conflict(active: bool, settings: dict) -> None:
     """Edge-triggered persistent notification for the conflict state."""
     state = store.load().get("notify_state", {})
@@ -243,7 +250,7 @@ def pull_now() -> dict:
     return {"result": result}
 
 
-def merge_now() -> dict:
+def merge_now(message: str | None = None) -> dict:
     token, repo, _, settings = _ctx()
     if git_ops.local_changes():
         commit_now(None)
@@ -254,7 +261,8 @@ def merge_now() -> dict:
     if detail.get("mergeable") is False:
         _notify_conflict(True, settings)
         return {"merged": False, "error": "conflict", "pr": detail}
-    outcome = gh.merge_pr(token, repo["full_name"], pr["number"])
+    outcome = gh.merge_pr(token, repo["full_name"], pr["number"],
+                          commit_title=(message or "").strip() or None)
     if not outcome.get("merged"):
         return {"merged": False, "error": "merge_failed", "pr": detail}
     gh.delete_branch(token, repo["full_name"], repo["sync_branch"])
@@ -308,6 +316,8 @@ def full_status() -> dict:
         pr = gh.find_open_pr(token, repo["full_name"], repo["sync_branch"])
         if pr:
             pr = gh.get_pr(token, repo["full_name"], pr["number"])
+            result["merge_suggested_message"] = merge_suggested_message(
+                pr["number"], repo, settings)
         result["pr"] = pr
     except gh.GitHubError as err:
         result["pr_error"] = err.kind

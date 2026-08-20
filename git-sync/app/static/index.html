@@ -370,6 +370,16 @@
                 <button class="btn" id="mergebtn" data-i18n="pr.merge"></button>
                 <a id="prlink" href="#" target="_blank" rel="noopener"><button class="btn text" data-i18n="pr.view"></button></a>
               </div>
+              <div id="mergebox" class="hidden">
+                <div id="mergequestion" style="font-size:14px;font-weight:500;margin-bottom:8px"></div>
+                <div class="label" style="margin-bottom:6px" data-i18n="pr.merge.message.label"></div>
+                <input type="text" id="mergemsg">
+                <div class="row actions" style="margin-top:10px">
+                  <span class="grow"></span>
+                  <button class="btn text" id="mergecancel" data-i18n="common.cancel"></button>
+                  <button class="btn" id="mergeconfirm" data-i18n="pr.merge.now"></button>
+                </div>
+              </div>
             </div>
           </div>
           <!-- Eingehend -->
@@ -639,6 +649,8 @@
       'pr.chip.mergeable': 'Mergebar',
       'pr.chip.checking': 'Prüfung läuft …',
       'pr.merge.confirm': 'Sync-PR #{number} jetzt in {branch} mergen?',
+      'pr.merge.message.label': 'Text für den Merge-Commit',
+      'pr.merge.now': 'Jetzt mergen',
       'incoming.title': 'Eingehend von main',
       'incoming.empty': 'Auf Stand mit {branch}.',
       'incoming.empty.plain': 'Auf Stand mit main.',
@@ -806,6 +818,8 @@
       'pr.chip.mergeable': 'Mergeable',
       'pr.chip.checking': 'Checking …',
       'pr.merge.confirm': 'Merge sync PR #{number} into {branch} now?',
+      'pr.merge.message.label': 'Merge commit message',
+      'pr.merge.now': 'Merge now',
       'incoming.title': 'Incoming from main',
       'incoming.empty': 'Up to date with {branch}.',
       'incoming.empty.plain': 'Up to date with main.',
@@ -1397,17 +1411,29 @@
     banner.classList.toggle('hidden', !conflict);
     if (conflict) el('conflictlink').href = pr.url;
     var mergebtn = el('mergebtn');
+    var mergebox = el('mergebox');
     mergebtn.disabled = conflict;
+    if (conflict) mergebox.classList.add('hidden');
     mergebtn.onclick = function () {
-      if (!window.confirm(t('pr.merge.confirm', { number: pr.number, branch: s.repo.main_branch }))) return;
-      mergebtn.disabled = true;
-      api('POST', 'api/sync/merge')
-        .then(function (result) {
-          if (!result.merged && result.error === 'conflict') loadSync();
-          else loadSync();
+      // Opening prefills the suggestion; while open, re-clicking (or a
+      // background refresh) must not clobber what the user typed.
+      if (mergebox.classList.contains('hidden')) {
+        el('mergequestion').textContent = t('pr.merge.confirm', { number: pr.number, branch: s.repo.main_branch });
+        el('mergemsg').value = s.merge_suggested_message || '';
+        mergebox.classList.remove('hidden');
+      }
+      el('mergemsg').focus();
+    };
+    el('mergecancel').onclick = function () { mergebox.classList.add('hidden'); };
+    el('mergeconfirm').onclick = function () {
+      el('mergeconfirm').disabled = true;
+      api('POST', 'api/sync/merge', { message: el('mergemsg').value })
+        .then(function () {
+          mergebox.classList.add('hidden');
+          loadSync();
         })
         .catch(function (err) { showError('dasherr', err); })
-        .finally(function () { mergebtn.disabled = false; });
+        .finally(function () { el('mergeconfirm').disabled = false; });
     };
   }
 
