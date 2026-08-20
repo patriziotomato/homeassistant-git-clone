@@ -101,7 +101,7 @@
     background: #e0e0e0; color: #757575; font-size: 14px; font-weight: 500;
   }
   .step.active .dot, .step.done .dot { background: #03a9f4; color: #fff; }
-  .step .name { font-size: 13px; color: #9e9e9e; }
+  .step .name { font-size: 13px; color: #9e9e9e; text-align: center; }
   .step.active .name { color: #212121; font-weight: 500; }
   .stepline { width: 70px; height: 2px; background: #e0e0e0; margin-top: 13px; }
   .stepline.done { background: #03a9f4; }
@@ -144,23 +144,27 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#03a9f4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"></path><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
     <h1>Git Sync</h1>
     <span id="userchip" class="chip hidden"></span>
-    <button id="gear" class="btn text hidden" style="padding:0 8px" title="Einstellungen">
+    <div class="seg" id="langseg" data-i18n-title="lang.switch">
+      <button type="button" data-lang="de">DE</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+    <button id="gear" class="btn text hidden" style="padding:0 8px" data-i18n-title="settings.title">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#727272" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"></path></svg>
     </button>
   </div>
   <main>
     <div id="stepper" class="stepper hidden">
-      <div class="step" id="s1"><div class="dot">1</div><div class="name">GitHub verbinden</div></div>
+      <div class="step" id="s1"><div class="dot">1</div><div class="name" data-i18n="step.github"></div></div>
       <div class="stepline" id="l1"></div>
-      <div class="step" id="s2"><div class="dot">2</div><div class="name">Repository</div></div>
+      <div class="step" id="s2"><div class="dot">2</div><div class="name" data-i18n="step.repo"></div></div>
       <div class="stepline" id="l2"></div>
-      <div class="step" id="s3"><div class="dot">3</div><div class="name">Profil</div></div>
+      <div class="step" id="s3"><div class="dot">3</div><div class="name" data-i18n="step.profile"></div></div>
     </div>
 
     <!-- Schritt 1: GitHub verbinden -->
     <div id="view1" class="card hidden">
-      <h2>Mit GitHub verbinden</h2>
-      <div class="meta">Git Sync koppelt deine Home-Assistant-Konfiguration an ein GitHub-Repository. Erstelle einen <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Personal Access Token</a> (klassisch mit <span class="mono">repo</span>-Scope, oder fine-grained mit Contents- und Pull-Request-Schreibrechten) und füge ihn hier ein.</div>
+      <h2 data-i18n="step1.heading"></h2>
+      <div class="meta" data-i18n-html="step1.intro"></div>
       <div>
         <div class="label" style="margin-bottom:6px">Personal Access Token</div>
         <input type="password" id="token" placeholder="ghp_… / github_pat_…" autocomplete="off">
@@ -168,67 +172,67 @@
       <div id="err1" class="error hidden"></div>
       <div class="row">
         <span class="grow"></span>
-        <button class="btn" id="connect">Verbinden</button>
+        <button class="btn" id="connect" data-i18n="step1.connect"></button>
       </div>
       <div class="shield">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6l8-3z"></path><path d="M9 12l2 2 4-4"></path></svg>
-        <span><strong>Schutz aktiv:</strong> <span class="mono">secrets.yaml</span>, <span class="mono">.storage/</span> (Zugangsdaten &amp; Token) und Datenbanken werden niemals übertragen. Der Token bleibt lokal in dieser App gespeichert.</span>
+        <span data-i18n-html="step1.shield"></span>
       </div>
     </div>
 
     <!-- Schritt 2: Repository & Branch -->
     <div id="view2" class="card hidden">
-      <h2>Repository &amp; Branch</h2>
+      <h2 data-i18n="step2.heading"></h2>
       <div>
-        <div class="label" style="margin-bottom:6px">Repository</div>
+        <div class="label" style="margin-bottom:6px" data-i18n="step2.repo.label"></div>
         <select id="repo"></select>
         <div class="row" style="margin-top:8px">
-          <span class="meta">oder</span>
-          <input type="text" id="newrepo" placeholder="Name für neues privates Repo" style="width:260px;height:36px">
-          <button class="btn text" id="createrepo">Anlegen</button>
+          <span class="meta" data-i18n="step2.or"></span>
+          <input type="text" id="newrepo" data-i18n-placeholder="step2.newrepo.placeholder" style="width:260px;height:36px">
+          <button class="btn text" id="createrepo" data-i18n="step2.create"></button>
         </div>
       </div>
       <div class="row" style="align-items:flex-start">
         <div class="grow">
-          <div class="label" style="margin-bottom:6px">Main-Branch (Quelle der Wahrheit)</div>
+          <div class="label" style="margin-bottom:6px" data-i18n="step2.mainbranch.label"></div>
           <select id="mainbranch"></select>
-          <div class="meta" style="margin-top:4px">Wird automatisch auf deine Instanz übernommen.</div>
+          <div class="meta" style="margin-top:4px" data-i18n="step2.mainbranch.hint"></div>
         </div>
         <div class="grow">
-          <div class="label" style="margin-bottom:6px">Sync-Branch</div>
+          <div class="label" style="margin-bottom:6px" data-i18n="step2.syncbranch.label"></div>
           <input type="text" id="syncbranch" value="ha-sync">
-          <div class="meta" style="margin-top:4px">Hier sammelt Git Sync deine lokalen Änderungen.</div>
+          <div class="meta" style="margin-top:4px" data-i18n="step2.syncbranch.hint"></div>
         </div>
       </div>
       <div class="info">
-        <strong>So arbeitet Git Sync</strong>
-        <span>Änderungen auf dem Main-Branch werden automatisch übernommen. Lokale Änderungen sammeln sich als Commits in <strong>einem offenen Pull Request</strong> auf dem Sync-Branch. Nur wenn du diesen PR mergst — hier oder auf GitHub — verändert sich der Main-Branch. Lass die GitHub-Einstellung „Automatically delete head branches“ dabei ausgeschaltet: Git Sync verwaltet den Sync-Branch selbst.</span>
+        <strong data-i18n="step2.info.title"></strong>
+        <span data-i18n-html="step2.info.body"></span>
       </div>
       <div id="err2" class="error hidden"></div>
       <div class="row">
-        <button class="btn text" id="back2">Zurück</button>
+        <button class="btn text" id="back2" data-i18n="common.back"></button>
         <span class="grow"></span>
-        <button class="btn" id="next2">Weiter</button>
+        <button class="btn" id="next2" data-i18n="common.next"></button>
       </div>
     </div>
 
     <!-- Schritt 3: Profil -->
     <div id="view3" class="card hidden">
-      <h2>Profil wählen</h2>
-      <div class="meta">Ein Profil bestimmt, welche Dateien ins Repository wandern.</div>
+      <h2 data-i18n="step3.heading"></h2>
+      <div class="meta" data-i18n="step3.intro"></div>
       <div class="profiles" id="profiles"></div>
       <div id="groups"></div>
       <div id="gitignore-editor" class="hidden">
         <div class="label" style="margin-bottom:6px">.gitignore</div>
         <textarea id="gitignore-text" rows="12" spellcheck="false"></textarea>
-        <div class="meta" style="margin-top:6px">Deine <span class="mono">.gitignore</span> bestimmt, was ins Repository wandert — du pflegst sie hier selbst. Änderungen werden wie jede andere Datei mitversioniert.</div>
+        <div class="meta" style="margin-top:6px" data-i18n-html="step3.gitignore.hint"></div>
       </div>
-      <div class="hint">Immer ausgeschlossen und nicht abwählbar — unabhängig vom Profil: <span class="mono">secrets.yaml · .storage/ (Rohdaten) · *.db · Logs &amp; Caches</span></div>
+      <div class="hint" data-i18n-html="step3.always"></div>
       <div id="err3" class="error hidden"></div>
       <div class="row">
-        <button class="btn text" id="back3">Zurück</button>
+        <button class="btn text" id="back3" data-i18n="common.back"></button>
         <span class="grow"></span>
-        <button class="btn" id="finish">Einrichtung abschließen</button>
+        <button class="btn" id="finish" data-i18n="step3.finish"></button>
       </div>
     </div>
 
@@ -237,13 +241,13 @@
 
       <!-- Kopplung nötig -->
       <div id="couplecard" class="card hidden">
-        <h3>Konfiguration koppeln</h3>
+        <h3 data-i18n="couple.heading"></h3>
         <div class="meta" id="couplemsg"></div>
         <div id="coupleerr" class="error hidden"></div>
         <div class="row">
           <span class="grow"></span>
-          <button class="btn text hidden" id="coupleforce">Remote umstellen &amp; koppeln</button>
-          <button class="btn" id="couplebtn">Jetzt koppeln</button>
+          <button class="btn text hidden" id="coupleforce" data-i18n="couple.force"></button>
+          <button class="btn" id="couplebtn" data-i18n="couple.now"></button>
         </div>
       </div>
 
@@ -252,15 +256,15 @@
         <div class="card" style="gap:10px">
           <div class="row">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0277bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.5 15a9 9 0 1 1-2-9.4L23 10"></path></svg>
-            <h3 class="grow" id="restarttitle">Änderungen übernommen — Neustart ausstehend</h3>
+            <h3 class="grow" id="restarttitle" data-i18n="restart.title"></h3>
             <span id="checkchip" class="chip"></span>
           </div>
           <div class="meta" id="restartmeta"></div>
           <div id="checkerror" class="error mono hidden" style="white-space:pre-wrap"></div>
           <div class="row">
             <span class="grow"></span>
-            <button class="btn text" id="recheckbtn">Prüfung wiederholen</button>
-            <button class="btn" id="restartbtn">Home Assistant neu starten</button>
+            <button class="btn text" id="recheckbtn" data-i18n="restart.recheck"></button>
+            <button class="btn" id="restartbtn" data-i18n="restart.button"></button>
           </div>
         </div>
       </div>
@@ -269,9 +273,9 @@
       <div id="conflictbanner" class="conflict hidden">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef6c00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="M12 3l10 18H2L12 3z"></path><path d="M12 10v5"></path><path d="M12 18.5h.01"></path></svg>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <strong>Konflikt zwischen deinen Änderungen und dem Main-Branch</strong>
-          <span>Git Sync löst Konflikte bewusst nicht in Home Assistant — entscheide auf GitHub im Pull Request, welche Änderungen gelten sollen. Danach geht es hier automatisch weiter.</span>
-          <div><a id="conflictlink" href="#" target="_blank" rel="noopener"><button class="btn">Auf GitHub lösen</button></a></div>
+          <strong data-i18n="conflict.title"></strong>
+          <span data-i18n="conflict.body"></span>
+          <div><a id="conflictlink" href="#" target="_blank" rel="noopener"><button class="btn" data-i18n="conflict.resolve"></button></a></div>
         </div>
       </div>
 
@@ -281,7 +285,7 @@
           <div class="card">
             <div class="row">
               <svg id="statusicon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 12.5l2.5 2.5 5-5.5"></path></svg>
-              <h3 class="grow" id="statustitle">Status</h3>
+              <h3 class="grow" id="statustitle" data-i18n="status.title"></h3>
               <span id="branchchip" class="chip mono"></span>
             </div>
             <div class="meta" id="statusmeta"></div>
@@ -289,25 +293,25 @@
             <div class="row">
               <div class="switch" id="autopull"><div class="track"></div><div class="thumb"></div></div>
               <div style="display:flex;flex-direction:column;gap:2px">
-                <div style="font-size:14px">Änderungen aus main sofort übernehmen</div>
-                <div class="meta" style="font-size:12px">Automatischer Pull im Hintergrund</div>
+                <div style="font-size:14px" data-i18n="status.autopull"></div>
+                <div class="meta" style="font-size:12px" data-i18n="status.autopull.hint"></div>
               </div>
             </div>
           </div>
           <!-- Lokale Änderungen -->
           <div class="card">
             <div class="row">
-              <h3 class="grow">Lokale Änderungen</h3>
+              <h3 class="grow" data-i18n="changes.title"></h3>
               <span id="changecount" class="chip hidden"></span>
             </div>
-            <div id="changes" class="empty">Keine lokalen Änderungen — alles committet.</div>
+            <div id="changes" class="empty" data-i18n="changes.empty"></div>
             <div id="commitbox" class="hidden">
-              <div class="label" style="margin-bottom:6px">Commit-Nachricht</div>
+              <div class="label" style="margin-bottom:6px" data-i18n="changes.message.label"></div>
               <input type="text" id="commitmsg">
               <div class="row" style="margin-top:10px">
                 <span class="meta" id="autocommitinfo"></span>
                 <span class="grow"></span>
-                <button class="btn" id="commitbtn">Jetzt committen</button>
+                <button class="btn" id="commitbtn" data-i18n="changes.commit"></button>
               </div>
             </div>
           </div>
@@ -317,22 +321,22 @@
           <div class="card">
             <div class="row">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#212121" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"></circle><circle cx="6" cy="18" r="2.5"></circle><circle cx="18" cy="18" r="2.5"></circle><path d="M6 8.5v7"></path><path d="M13 6h3a2 2 0 0 1 2 2v7.5"></path><path d="M15.5 3.5L13 6l2.5 2.5"></path></svg>
-              <h3 class="grow">Änderungen aus HA</h3>
+              <h3 class="grow" data-i18n="pr.heading"></h3>
               <span id="prchip" class="chip hidden"></span>
             </div>
-            <div id="prempty" class="empty">Kein offener Sync-PR — es liegt nichts zum Mergen bereit.</div>
+            <div id="prempty" class="empty" data-i18n="pr.empty"></div>
             <div id="prmissing" class="hidden" style="display:flex;flex-direction:column;gap:10px">
-              <div class="meta">Es liegen Commits auf dem Sync-Branch bereit, aber der Sammel-PR fehlt noch (die Erstellung wird automatisch nachgeholt — oder direkt hier):</div>
+              <div class="meta" data-i18n="pr.missing"></div>
               <div id="prmissingerr" class="error hidden"></div>
-              <div class="row"><span class="grow"></span><button class="btn" id="createprbtn">PR jetzt anlegen</button></div>
+              <div class="row"><span class="grow"></span><button class="btn" id="createprbtn" data-i18n="pr.create"></button></div>
             </div>
             <div id="prbox" class="hidden" style="display:flex;flex-direction:column;gap:12px">
               <div style="font-size:15px;font-weight:500" id="prtitle"></div>
               <div id="prcommits" style="display:flex;flex-direction:column;gap:8px"></div>
-              <div class="hint">Mergen ist immer eine bewusste, manuelle Aktion — nie automatisch. Erst der Merge verändert main.</div>
+              <div class="hint" data-i18n="pr.hint"></div>
               <div class="row">
-                <button class="btn" id="mergebtn">PR mergen …</button>
-                <a id="prlink" href="#" target="_blank" rel="noopener"><button class="btn text">Auf GitHub ansehen</button></a>
+                <button class="btn" id="mergebtn" data-i18n="pr.merge"></button>
+                <a id="prlink" href="#" target="_blank" rel="noopener"><button class="btn text" data-i18n="pr.view"></button></a>
               </div>
             </div>
           </div>
@@ -340,31 +344,31 @@
           <div class="card">
             <div class="row">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#212121" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7 10l5 5 5-5"></path><path d="M4 21h16"></path></svg>
-              <h3 class="grow">Eingehend von main</h3>
+              <h3 class="grow" data-i18n="incoming.title"></h3>
               <span id="incount" class="chip hidden"></span>
             </div>
-            <div id="incoming" class="empty">Auf Stand mit main.</div>
+            <div id="incoming" class="empty" data-i18n="incoming.empty.plain"></div>
             <div class="row hidden" id="pullrow">
               <span class="grow"></span>
-              <button class="btn" id="pullbtn">Jetzt übernehmen</button>
+              <button class="btn" id="pullbtn" data-i18n="incoming.pull"></button>
             </div>
           </div>
           <!-- Verwaltung -->
           <div class="card">
-            <h3>Einrichtung</h3>
+            <h3 data-i18n="setup.title"></h3>
             <div class="meta" id="sumrepo"></div>
             <div class="meta" id="sumprofile"></div>
             <div class="row">
-              <button class="btn text" id="editgitignore">.gitignore bearbeiten</button>
+              <button class="btn text" id="editgitignore" data-i18n="setup.editgitignore"></button>
               <span class="grow"></span>
-              <button class="btn text danger" id="disconnect">Verbindung trennen</button>
+              <button class="btn text danger" id="disconnect" data-i18n="common.disconnect"></button>
             </div>
             <div id="dash-gitignore" class="hidden">
               <textarea id="dash-gitignore-text" rows="10" spellcheck="false"></textarea>
               <div class="row" style="margin-top:8px">
                 <span class="grow"></span>
-                <button class="btn text" id="dash-gitignore-cancel">Abbrechen</button>
-                <button class="btn" id="dash-gitignore-save">Speichern</button>
+                <button class="btn text" id="dash-gitignore-cancel" data-i18n="common.cancel"></button>
+                <button class="btn" id="dash-gitignore-save" data-i18n="common.save"></button>
               </div>
             </div>
           </div>
@@ -376,108 +380,112 @@
     <!-- Einstellungen -->
     <div id="viewsettings" class="hidden" style="display:flex;flex-direction:column;gap:16px">
       <div class="row">
-        <button class="btn text" id="settingsback">← Zurück</button>
-        <h2 class="grow" style="font-size:18px;font-weight:400;margin:0">Einstellungen</h2>
+        <button class="btn text" id="settingsback" data-i18n="settings.back"></button>
+        <h2 class="grow" style="font-size:18px;font-weight:400;margin:0" data-i18n="settings.title"></h2>
       </div>
       <div class="cols">
         <div class="col">
           <div class="card">
-            <h3>Synchronisation</h3>
+            <h3 data-i18n="settings.sync.title"></h3>
             <div class="row">
               <div class="switch" id="set-autopull"><div class="track"></div><div class="thumb"></div></div>
               <div style="display:flex;flex-direction:column;gap:2px">
-                <div style="font-size:14px">Änderungen aus main automatisch übernehmen</div>
-                <div class="meta" style="font-size:12px">Prüft im Hintergrund auf neue Commits</div>
+                <div style="font-size:14px" data-i18n="settings.autopull"></div>
+                <div class="meta" style="font-size:12px" data-i18n="settings.autopull.hint"></div>
               </div>
             </div>
             <div>
-              <div class="label" style="margin-bottom:6px">Prüf-Intervall</div>
+              <div class="label" style="margin-bottom:6px" data-i18n="settings.pollinterval"></div>
               <select id="set-pollinterval">
-                <option value="30">Alle 30 Sekunden</option>
-                <option value="60">Jede Minute</option>
-                <option value="300">Alle 5 Minuten</option>
+                <option value="30" data-i18n="settings.poll.30"></option>
+                <option value="60" data-i18n="settings.poll.60"></option>
+                <option value="300" data-i18n="settings.poll.300"></option>
               </select>
             </div>
             <div class="divider"></div>
             <div class="row">
               <div class="switch" id="set-autocommit"><div class="track"></div><div class="thumb"></div></div>
               <div style="display:flex;flex-direction:column;gap:2px">
-                <div style="font-size:14px">Lokale Änderungen automatisch committen</div>
-                <div class="meta" style="font-size:12px">In den offenen Sync-PR, nach einer Ruhephase</div>
+                <div style="font-size:14px" data-i18n="settings.autocommit"></div>
+                <div class="meta" style="font-size:12px" data-i18n="settings.autocommit.hint"></div>
               </div>
             </div>
             <div>
-              <div class="label" style="margin-bottom:6px">Ruhephase vor Auto-Commit</div>
+              <div class="label" style="margin-bottom:6px" data-i18n="settings.commitdelay"></div>
               <select id="set-commitdelay">
-                <option value="15">15 Sekunden</option>
-                <option value="120">2 Minuten</option>
-                <option value="600">10 Minuten</option>
+                <option value="15" data-i18n="settings.delay.15"></option>
+                <option value="120" data-i18n="settings.delay.120"></option>
+                <option value="600" data-i18n="settings.delay.600"></option>
               </select>
             </div>
-            <div class="hint">Committet wird immer in den offenen Sync-PR. main verändert sich ausschließlich durch dessen manuellen Merge — daher gibt es hier bewusst keinen Push-Modus.</div>
+            <div class="hint" data-i18n="settings.sync.hint"></div>
           </div>
           <div class="card">
-            <h3>Commits</h3>
+            <h3 data-i18n="settings.commits.title"></h3>
             <div>
-              <div class="label" style="margin-bottom:6px">Vorlage für automatische Commit-Nachrichten</div>
+              <div class="label" style="margin-bottom:6px" data-i18n="settings.template.label"></div>
               <input type="text" id="set-template" class="mono">
-              <div class="meta" style="margin-top:4px">Platzhalter: <span class="mono">{dateien}</span> · <span class="mono">{anzahl}</span></div>
+              <div class="meta" style="margin-top:4px" data-i18n-html="settings.template.hint"></div>
             </div>
             <div class="row">
               <span class="grow"></span>
-              <button class="btn text" id="set-template-save">Speichern</button>
+              <button class="btn text" id="set-template-save" data-i18n="common.save"></button>
             </div>
           </div>
         </div>
         <div class="col">
           <div class="card">
-            <h3>Benachrichtigungen</h3>
+            <h3 data-i18n="settings.notify.title"></h3>
             <div class="row">
               <div class="switch" id="set-notifyconflict"><div class="track"></div><div class="thumb"></div></div>
               <div style="display:flex;flex-direction:column;gap:2px">
-                <div style="font-size:14px">Bei Konflikt</div>
-                <div class="meta" style="font-size:12px">Dauerhafte Benachrichtigung in Home Assistant</div>
+                <div style="font-size:14px" data-i18n="settings.notify.conflict"></div>
+                <div class="meta" style="font-size:12px" data-i18n="settings.notify.conflict.hint"></div>
               </div>
             </div>
             <div class="row">
               <div class="switch" id="set-notifypr"><div class="track"></div><div class="thumb"></div></div>
               <div style="display:flex;flex-direction:column;gap:2px">
-                <div style="font-size:14px">Wenn der Sync-PR auf einen Merge wartet</div>
-                <div class="meta" style="font-size:12px">Einmalige Erinnerung pro PR</div>
+                <div style="font-size:14px" data-i18n="settings.notify.pr"></div>
+                <div class="meta" style="font-size:12px" data-i18n="settings.notify.pr.hint"></div>
               </div>
             </div>
             <div>
-              <div class="label" style="margin-bottom:6px">Erinnerung nach</div>
+              <div class="label" style="margin-bottom:6px" data-i18n="settings.notify.prhours"></div>
               <select id="set-prhours">
-                <option value="6">6 Stunden</option>
-                <option value="24">24 Stunden</option>
-                <option value="72">3 Tagen</option>
+                <option value="6" data-i18n="settings.prhours.6"></option>
+                <option value="24" data-i18n="settings.prhours.24"></option>
+                <option value="72" data-i18n="settings.prhours.72"></option>
               </select>
             </div>
             <div class="row">
               <div class="switch" id="set-notifyrestart"><div class="track"></div><div class="thumb"></div></div>
               <div style="display:flex;flex-direction:column;gap:2px">
-                <div style="font-size:14px">Wenn ein Neustart aussteht</div>
-                <div class="meta" style="font-size:12px">Nach übernommenen Änderungen aus main</div>
+                <div style="font-size:14px" data-i18n="settings.notify.restart"></div>
+                <div class="meta" style="font-size:12px" data-i18n="settings.notify.restart.hint"></div>
               </div>
             </div>
           </div>
           <div class="card">
-            <h3>Profil</h3>
+            <h3 data-i18n="settings.profile.title"></h3>
             <div class="meta" id="set-profile"></div>
             <div class="row">
               <span class="grow"></span>
-              <button class="btn text" id="set-changeprofile">Profil ändern</button>
+              <button class="btn text" id="set-changeprofile" data-i18n="settings.profile.change"></button>
             </div>
           </div>
           <div class="card">
-            <h3>Verbindung</h3>
+            <h3 data-i18n="settings.connection.title"></h3>
             <div class="meta" id="set-repo"></div>
-            <div class="meta">Sync-Branch: <span class="mono" id="set-syncbranch"></span> — änderbar durch Neueinrichtung</div>
+            <div class="meta">
+              <span data-i18n="settings.connection.syncbranch"></span>
+              <span class="mono" id="set-syncbranch"></span>
+              <span data-i18n="settings.connection.syncbranch.note"></span>
+            </div>
             <div class="divider"></div>
             <div class="row">
               <span class="grow"></span>
-              <button class="btn text danger" id="set-disconnect">Verbindung trennen</button>
+              <button class="btn text danger" id="set-disconnect" data-i18n="common.disconnect"></button>
             </div>
           </div>
         </div>
@@ -489,43 +497,427 @@
 (function () {
   'use strict';
 
+  // ---- Sprachen / languages
+  // Beide Wörterbücher tragen exakt dieselben Schlüssel (tests/test_i18n.py).
+  // Both dictionaries carry exactly the same keys (tests/test_i18n.py).
+  var LANGS = ['de', 'en'];
+  var I18N = {
+    de: {
+      'lang.switch': 'Sprache umschalten',
+      'common.back': 'Zurück',
+      'common.next': 'Weiter',
+      'common.save': 'Speichern',
+      'common.cancel': 'Abbrechen',
+      'common.disconnect': 'Verbindung trennen',
+      'step.github': 'GitHub verbinden',
+      'step.repo': 'Repository',
+      'step.profile': 'Profil',
+      'step1.heading': 'Mit GitHub verbinden',
+      'step1.intro': 'Git Sync koppelt deine Home-Assistant-Konfiguration an ein GitHub-Repository. Erstelle einen <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Personal Access Token</a> (klassisch mit <span class="mono">repo</span>-Scope, oder fine-grained mit Contents- und Pull-Request-Schreibrechten) und füge ihn hier ein.',
+      'step1.connect': 'Verbinden',
+      'step1.shield': '<strong>Schutz aktiv:</strong> <span class="mono">secrets.yaml</span>, <span class="mono">.storage/</span> (Zugangsdaten &amp; Token) und Datenbanken werden niemals übertragen. Der Token bleibt lokal in dieser App gespeichert.',
+      'step2.heading': 'Repository & Branch',
+      'step2.repo.label': 'Repository',
+      'step2.repo.private': ' (privat)',
+      'step2.or': 'oder',
+      'step2.newrepo.placeholder': 'Name für neues privates Repo',
+      'step2.create': 'Anlegen',
+      'step2.mainbranch.label': 'Main-Branch (Quelle der Wahrheit)',
+      'step2.mainbranch.hint': 'Wird automatisch auf deine Instanz übernommen.',
+      'step2.syncbranch.label': 'Sync-Branch',
+      'step2.syncbranch.hint': 'Hier sammelt Git Sync deine lokalen Änderungen.',
+      'step2.info.title': 'So arbeitet Git Sync',
+      'step2.info.body': 'Änderungen auf dem Main-Branch werden automatisch übernommen. Lokale Änderungen sammeln sich als Commits in <strong>einem offenen Pull Request</strong> auf dem Sync-Branch. Nur wenn du diesen PR mergst — hier oder auf GitHub — verändert sich der Main-Branch. Lass die GitHub-Einstellung „Automatically delete head branches“ dabei ausgeschaltet: Git Sync verwaltet den Sync-Branch selbst.',
+      'step3.heading': 'Profil wählen',
+      'step3.intro': 'Ein Profil bestimmt, welche Dateien ins Repository wandern.',
+      'step3.gitignore.hint': 'Deine <span class="mono">.gitignore</span> bestimmt, was ins Repository wandert — du pflegst sie hier selbst. Änderungen werden wie jede andere Datei mitversioniert.',
+      'step3.always': 'Immer ausgeschlossen und nicht abwählbar — unabhängig vom Profil: <span class="mono">secrets.yaml · .storage/ (Rohdaten) · *.db · Logs &amp; Caches</span>',
+      'step3.finish': 'Einrichtung abschließen',
+      'profile.recommended': 'Empfohlen',
+      'profile.eigene_gitignore.name': 'Eigene .gitignore',
+      'profile.eigene_gitignore.desc': 'Deine .gitignore bestimmt den Umfang — du pflegst sie selbst.',
+      'profile.komplett.name': 'Komplett',
+      'profile.komplett.desc': 'Alle Dateigruppen inklusive vollständigem Anwendungs-Code.',
+      'profile.ohne_anwendungen.name': 'Ohne Anwendungen',
+      'profile.ohne_anwendungen.desc': 'Konfiguration ja — Anwendungen nur als Versions-Lockfile.',
+      'profile.nur_kern.name': 'Nur Kern-Konfiguration',
+      'profile.nur_kern.desc': 'Nur die zentralen YAML-Dateien.',
+      'profile.benutzerdefiniert.name': 'Benutzerdefiniert',
+      'profile.benutzerdefiniert.desc': 'Dateigruppen frei zusammenstellen.',
+      'group.experimental': 'EXPERIMENTELL',
+      'group.core.name': 'Kern-Konfiguration',
+      'group.core.files': 'configuration.yaml · automations.yaml · scripts.yaml · scenes.yaml',
+      'group.blueprints.name': 'Blueprints & Dashboards (YAML)',
+      'group.blueprints.files': 'blueprints/ · dashboards/',
+      'group.esphome.name': 'ESPHome',
+      'group.esphome.files': 'esphome/ — ohne esphome/secrets.yaml',
+      'group.themes_www.name': 'Themes & Web-Assets',
+      'group.themes_www.files': 'themes/ · www/',
+      'group.apps.name': 'Anwendungen',
+      'group.apps.files': 'custom_components/',
+      'group.apps.lockfile': 'Nur Lockfile',
+      'group.apps.full': 'Vollständig',
+      'group.ui_export.name': 'UI-verwaltete Einstellungen',
+      'group.ui_export.files': 'Bereinigter Export ausgewählter .storage-Inhalte',
+      'couple.heading': 'Konfiguration koppeln',
+      'couple.now': 'Jetzt koppeln',
+      'couple.force': 'Remote umstellen & koppeln',
+      'couple.not_a_repo': 'Deine Konfiguration ist noch kein Git-Repository. Beim Koppeln wird der Main-Branch als Ausgangsbasis übernommen — lokale Unterschiede bleiben als Änderungen erhalten und wandern in den Sync-PR.',
+      'couple.no_origin': 'Das Repository hat noch kein Remote. Beim Koppeln wird dein gewähltes GitHub-Repo als Remote eingerichtet.',
+      'couple.remote_mismatch': 'Das Konfigurationsverzeichnis zeigt auf ein anderes Remote{remote}. Zum Koppeln muss es auf dein gewähltes Repo umgestellt werden.',
+      'couple.wrong_branch': 'Die Konfiguration ist noch nicht auf dem Sync-Branch. Beim Koppeln wechselt Git Sync auf {branch} — am Arbeitsstand ändert sich nichts.',
+      'couple.config_missing': 'Konfigurationsverzeichnis nicht gefunden.',
+      'restart.title': 'Änderungen übernommen — Neustart ausstehend',
+      'restart.recheck': 'Prüfung wiederholen',
+      'restart.button': 'Home Assistant neu starten',
+      'restart.check.ok': 'Prüfung OK',
+      'restart.check.error': 'Prüfung fehlgeschlagen',
+      'restart.check.unavailable': 'Prüfung nicht verfügbar',
+      'restart.meta.ok': 'Änderungen aus main sind in der Konfiguration angekommen und die Konfigurationsprüfung (ha core check) war erfolgreich. Ein Neustart aktiviert sie — er startet erst nach deiner Bestätigung.',
+      'restart.meta.error': 'Änderungen aus main sind angekommen, aber die Konfigurationsprüfung meldet einen Fehler. Bitte erst korrigieren (auf GitHub oder lokal) — der Neustart bleibt so lange gesperrt.',
+      'restart.meta.unavailable': 'Die Konfigurationsprüfung war nicht erreichbar. Du kannst trotzdem neu starten — auf eigenes Risiko.',
+      'restart.confirm': 'Home Assistant jetzt neu starten? Automationen und Oberfläche sind dabei kurz nicht verfügbar.',
+      'restart.running': 'Neustart läuft — Home Assistant ist gleich wieder da.',
+      'conflict.title': 'Konflikt zwischen deinen Änderungen und dem Main-Branch',
+      'conflict.body': 'Git Sync löst Konflikte bewusst nicht in Home Assistant — entscheide auf GitHub im Pull Request, welche Änderungen gelten sollen. Danach geht es hier automatisch weiter.',
+      'conflict.resolve': 'Auf GitHub lösen',
+      'status.title': 'Status',
+      'status.uptodate': 'Auf Stand mit {branch}',
+      'status.behind': '{count} Commit(s) hinter {branch}',
+      'status.meta': 'Letzter Abgleich: {time} Uhr · Profil: {profile}',
+      'status.autopull': 'Änderungen aus main sofort übernehmen',
+      'status.autopull.hint': 'Automatischer Pull im Hintergrund',
+      'changes.title': 'Lokale Änderungen',
+      'changes.empty': 'Keine lokalen Änderungen — alles committet.',
+      'changes.count': '{count} Datei(en)',
+      'changes.more': '… und {count} weitere',
+      'changes.message.label': 'Commit-Nachricht',
+      'changes.commit': 'Jetzt committen',
+      'changes.autocommit.in': 'Auto-Commit in ~{minutes} Min.',
+      'changes.autocommit.off': 'Auto-Commit ist aus.',
+      'commit.link': 'Commit {hash} auf GitHub ansehen',
+      'pr.heading': 'Änderungen aus HA',
+      'pr.empty': 'Kein offener Sync-PR — es liegt nichts zum Mergen bereit.',
+      'pr.missing': 'Es liegen Commits auf dem Sync-Branch bereit, aber der Sammel-PR fehlt noch (die Erstellung wird automatisch nachgeholt — oder direkt hier):',
+      'pr.create': 'PR jetzt anlegen',
+      'pr.hint': 'Mergen ist immer eine bewusste, manuelle Aktion — nie automatisch. Erst der Merge verändert main.',
+      'pr.merge': 'PR mergen …',
+      'pr.view': 'Auf GitHub ansehen',
+      'pr.chip.conflict': 'Konflikt',
+      'pr.chip.mergeable': 'Mergebar',
+      'pr.chip.checking': 'Prüfung läuft …',
+      'pr.merge.confirm': 'Sync-PR #{number} jetzt in {branch} mergen?',
+      'incoming.title': 'Eingehend von main',
+      'incoming.empty': 'Auf Stand mit {branch}.',
+      'incoming.empty.plain': 'Auf Stand mit main.',
+      'incoming.count': '{count} Commit(s)',
+      'incoming.pull': 'Jetzt übernehmen',
+      'setup.title': 'Einrichtung',
+      'setup.repo': 'Repository: {repo} · Main: {main} · Sync: {sync}',
+      'setup.profile': 'Profil: {profile}',
+      'setup.lockfile': ' · Anwendungen als Lockfile',
+      'setup.editgitignore': '.gitignore bearbeiten',
+      'disconnect.confirm': 'Verbindung zu GitHub trennen? Repo- und Profil-Einstellungen werden zurückgesetzt.',
+      'settings.back': '← Zurück',
+      'settings.title': 'Einstellungen',
+      'settings.sync.title': 'Synchronisation',
+      'settings.autopull': 'Änderungen aus main automatisch übernehmen',
+      'settings.autopull.hint': 'Prüft im Hintergrund auf neue Commits',
+      'settings.pollinterval': 'Prüf-Intervall',
+      'settings.poll.30': 'Alle 30 Sekunden',
+      'settings.poll.60': 'Jede Minute',
+      'settings.poll.300': 'Alle 5 Minuten',
+      'settings.autocommit': 'Lokale Änderungen automatisch committen',
+      'settings.autocommit.hint': 'In den offenen Sync-PR, nach einer Ruhephase',
+      'settings.commitdelay': 'Ruhephase vor Auto-Commit',
+      'settings.delay.15': '15 Sekunden',
+      'settings.delay.120': '2 Minuten',
+      'settings.delay.600': '10 Minuten',
+      'settings.sync.hint': 'Committet wird immer in den offenen Sync-PR. main verändert sich ausschließlich durch dessen manuellen Merge — daher gibt es hier bewusst keinen Push-Modus.',
+      'settings.commits.title': 'Commits',
+      'settings.template.label': 'Vorlage für automatische Commit-Nachrichten',
+      'settings.template.hint': 'Platzhalter: <span class="mono">{dateien}</span> · <span class="mono">{anzahl}</span>',
+      'settings.notify.title': 'Benachrichtigungen',
+      'settings.notify.conflict': 'Bei Konflikt',
+      'settings.notify.conflict.hint': 'Dauerhafte Benachrichtigung in Home Assistant',
+      'settings.notify.pr': 'Wenn der Sync-PR auf einen Merge wartet',
+      'settings.notify.pr.hint': 'Einmalige Erinnerung pro PR',
+      'settings.notify.prhours': 'Erinnerung nach',
+      'settings.prhours.6': '6 Stunden',
+      'settings.prhours.24': '24 Stunden',
+      'settings.prhours.72': '3 Tagen',
+      'settings.notify.restart': 'Wenn ein Neustart aussteht',
+      'settings.notify.restart.hint': 'Nach übernommenen Änderungen aus main',
+      'settings.profile.title': 'Profil',
+      'settings.profile.active': 'Aktives Profil: {profile}',
+      'settings.profile.change': 'Profil ändern',
+      'settings.connection.title': 'Verbindung',
+      'settings.connection.repo': 'Repository: {repo} · Main-Branch: {main}',
+      'settings.connection.syncbranch': 'Sync-Branch:',
+      'settings.connection.syncbranch.note': '— änderbar durch Neueinrichtung',
+      'error.invalid_token': 'Der Token wurde von GitHub nicht akzeptiert. Bitte prüfe Wert und Berechtigungen.',
+      'error.forbidden': 'GitHub hat den Zugriff verweigert — fehlen dem Token Berechtigungen?',
+      'error.network': 'GitHub ist gerade nicht erreichbar. Bitte später erneut versuchen.',
+      'error.branches_equal': 'Main- und Sync-Branch müssen unterschiedlich sein.',
+      'error.invalid_repo': 'Bitte ein Repository auswählen.',
+      'error.missing_name': 'Bitte einen Repo-Namen angeben.',
+      'error.missing_token': 'Bitte einen Token eingeben.',
+      'error.remote_mismatch': 'Das Konfigurationsverzeichnis zeigt auf ein anderes Remote.',
+      'error.not_configured': 'Einrichtung unvollständig.',
+      'error.not_connected': 'Keine Verbindung zu GitHub — bitte neu verbinden.',
+      'error.git_failed': 'Ein Git-Befehl ist fehlgeschlagen — Details im App-Protokoll.',
+      'error.config_missing': 'Konfigurationsverzeichnis nicht gefunden.',
+      'error.unknown': 'Fehler: {code}'
+    },
+    en: {
+      'lang.switch': 'Switch language',
+      'common.back': 'Back',
+      'common.next': 'Next',
+      'common.save': 'Save',
+      'common.cancel': 'Cancel',
+      'common.disconnect': 'Disconnect',
+      'step.github': 'Connect GitHub',
+      'step.repo': 'Repository',
+      'step.profile': 'Profile',
+      'step1.heading': 'Connect to GitHub',
+      'step1.intro': 'Git Sync couples your Home Assistant configuration to a GitHub repository. Create a <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">personal access token</a> (classic with the <span class="mono">repo</span> scope, or fine-grained with write access to Contents and Pull requests) and paste it here.',
+      'step1.connect': 'Connect',
+      'step1.shield': '<strong>Protection active:</strong> <span class="mono">secrets.yaml</span>, <span class="mono">.storage/</span> (credentials &amp; tokens) and databases are never transferred. The token stays stored locally in this app.',
+      'step2.heading': 'Repository & branch',
+      'step2.repo.label': 'Repository',
+      'step2.repo.private': ' (private)',
+      'step2.or': 'or',
+      'step2.newrepo.placeholder': 'Name for a new private repo',
+      'step2.create': 'Create',
+      'step2.mainbranch.label': 'Main branch (source of truth)',
+      'step2.mainbranch.hint': 'Applied to your instance automatically.',
+      'step2.syncbranch.label': 'Sync branch',
+      'step2.syncbranch.hint': 'Where Git Sync collects your local changes.',
+      'step2.info.title': 'How Git Sync works',
+      'step2.info.body': 'Changes on the main branch are applied automatically. Local changes collect as commits in <strong>one open pull request</strong> on the sync branch. Only merging that pull request — here or on GitHub — changes the main branch. Leave the GitHub repository setting &quot;Automatically delete head branches&quot; switched off: Git Sync manages the sync branch itself.',
+      'step3.heading': 'Choose a profile',
+      'step3.intro': 'A profile decides which files end up in the repository.',
+      'step3.gitignore.hint': 'Your <span class="mono">.gitignore</span> decides what ends up in the repository — you maintain it yourself, right here. Changes to it are versioned like any other file.',
+      'step3.always': 'Always excluded and not selectable — regardless of the profile: <span class="mono">secrets.yaml · .storage/ (raw data) · *.db · logs &amp; caches</span>',
+      'step3.finish': 'Finish setup',
+      'profile.recommended': 'Recommended',
+      'profile.eigene_gitignore.name': 'Your own .gitignore',
+      'profile.eigene_gitignore.desc': 'Your .gitignore defines the scope — you maintain it yourself.',
+      'profile.komplett.name': 'Complete',
+      'profile.komplett.desc': 'All file groups including the full application code.',
+      'profile.ohne_anwendungen.name': 'Without applications',
+      'profile.ohne_anwendungen.desc': 'Configuration yes — applications only as a version lockfile.',
+      'profile.nur_kern.name': 'Core configuration only',
+      'profile.nur_kern.desc': 'Just the central YAML files.',
+      'profile.benutzerdefiniert.name': 'Custom',
+      'profile.benutzerdefiniert.desc': 'Pick the file groups yourself.',
+      'group.experimental': 'EXPERIMENTAL',
+      'group.core.name': 'Core configuration',
+      'group.core.files': 'configuration.yaml · automations.yaml · scripts.yaml · scenes.yaml',
+      'group.blueprints.name': 'Blueprints & dashboards (YAML)',
+      'group.blueprints.files': 'blueprints/ · dashboards/',
+      'group.esphome.name': 'ESPHome',
+      'group.esphome.files': 'esphome/ — without esphome/secrets.yaml',
+      'group.themes_www.name': 'Themes & web assets',
+      'group.themes_www.files': 'themes/ · www/',
+      'group.apps.name': 'Applications',
+      'group.apps.files': 'custom_components/',
+      'group.apps.lockfile': 'Lockfile only',
+      'group.apps.full': 'Complete',
+      'group.ui_export.name': 'UI-managed settings',
+      'group.ui_export.files': 'Sanitised export of selected .storage contents',
+      'couple.heading': 'Couple the configuration',
+      'couple.now': 'Couple now',
+      'couple.force': 'Switch remote & couple',
+      'couple.not_a_repo': 'Your configuration is not a git repository yet. Coupling adopts the main branch as the baseline — local differences stay as changes and move into the sync PR.',
+      'couple.no_origin': 'The repository has no remote yet. Coupling sets up your chosen GitHub repo as the remote.',
+      'couple.remote_mismatch': 'The configuration directory points at a different remote{remote}. To couple it, it has to be switched to your chosen repo.',
+      'couple.wrong_branch': 'The configuration is not on the sync branch yet. Coupling switches Git Sync to {branch} — your working state stays as it is.',
+      'couple.config_missing': 'Configuration directory not found.',
+      'restart.title': 'Changes applied — restart pending',
+      'restart.recheck': 'Check again',
+      'restart.button': 'Restart Home Assistant',
+      'restart.check.ok': 'Check OK',
+      'restart.check.error': 'Check failed',
+      'restart.check.unavailable': 'Check unavailable',
+      'restart.meta.ok': 'Changes from main have landed in the configuration and the configuration check (ha core check) succeeded. A restart activates them — it only starts once you confirm.',
+      'restart.meta.error': 'Changes from main have landed, but the configuration check reports an error. Please fix it first (on GitHub or locally) — the restart stays locked until then.',
+      'restart.meta.unavailable': 'The configuration check was not reachable. You can restart anyway — at your own risk.',
+      'restart.confirm': 'Restart Home Assistant now? Automations and the interface are briefly unavailable.',
+      'restart.running': 'Restarting — Home Assistant will be back shortly.',
+      'conflict.title': 'Conflict between your changes and the main branch',
+      'conflict.body': 'Git Sync deliberately does not resolve conflicts inside Home Assistant — decide in the pull request on GitHub which changes should win. Everything continues here automatically afterwards.',
+      'conflict.resolve': 'Resolve on GitHub',
+      'status.title': 'Status',
+      'status.uptodate': 'Up to date with {branch}',
+      'status.behind': '{count} commit(s) behind {branch}',
+      'status.meta': 'Last sync: {time} · Profile: {profile}',
+      'status.autopull': 'Apply changes from main immediately',
+      'status.autopull.hint': 'Automatic pull in the background',
+      'changes.title': 'Local changes',
+      'changes.empty': 'No local changes — everything is committed.',
+      'changes.count': '{count} file(s)',
+      'changes.more': '… and {count} more',
+      'changes.message.label': 'Commit message',
+      'changes.commit': 'Commit now',
+      'changes.autocommit.in': 'Auto-commit in ~{minutes} min.',
+      'changes.autocommit.off': 'Auto-commit is off.',
+      'commit.link': 'View commit {hash} on GitHub',
+      'pr.heading': 'Changes from HA',
+      'pr.empty': 'No open sync PR — nothing is waiting to be merged.',
+      'pr.missing': 'Commits are waiting on the sync branch, but the collecting PR is still missing (creation is retried automatically — or do it right here):',
+      'pr.create': 'Create the PR now',
+      'pr.hint': 'Merging is always a deliberate, manual action — never automatic. Only the merge changes main.',
+      'pr.merge': 'Merge PR …',
+      'pr.view': 'View on GitHub',
+      'pr.chip.conflict': 'Conflict',
+      'pr.chip.mergeable': 'Mergeable',
+      'pr.chip.checking': 'Checking …',
+      'pr.merge.confirm': 'Merge sync PR #{number} into {branch} now?',
+      'incoming.title': 'Incoming from main',
+      'incoming.empty': 'Up to date with {branch}.',
+      'incoming.empty.plain': 'Up to date with main.',
+      'incoming.count': '{count} commit(s)',
+      'incoming.pull': 'Apply now',
+      'setup.title': 'Setup',
+      'setup.repo': 'Repository: {repo} · Main: {main} · Sync: {sync}',
+      'setup.profile': 'Profile: {profile}',
+      'setup.lockfile': ' · applications as a lockfile',
+      'setup.editgitignore': 'Edit .gitignore',
+      'disconnect.confirm': 'Disconnect from GitHub? Repository and profile settings are reset.',
+      'settings.back': '← Back',
+      'settings.title': 'Settings',
+      'settings.sync.title': 'Synchronisation',
+      'settings.autopull': 'Apply changes from main automatically',
+      'settings.autopull.hint': 'Checks for new commits in the background',
+      'settings.pollinterval': 'Check interval',
+      'settings.poll.30': 'Every 30 seconds',
+      'settings.poll.60': 'Every minute',
+      'settings.poll.300': 'Every 5 minutes',
+      'settings.autocommit': 'Commit local changes automatically',
+      'settings.autocommit.hint': 'Into the open sync PR, after a quiet period',
+      'settings.commitdelay': 'Quiet period before auto-commit',
+      'settings.delay.15': '15 seconds',
+      'settings.delay.120': '2 minutes',
+      'settings.delay.600': '10 minutes',
+      'settings.sync.hint': 'Commits always go into the open sync PR. main only ever changes through its manual merge — which is why there is deliberately no push mode here.',
+      'settings.commits.title': 'Commits',
+      'settings.template.label': 'Template for automatic commit messages',
+      'settings.template.hint': 'Placeholders: <span class="mono">{files}</span> · <span class="mono">{count}</span>',
+      'settings.notify.title': 'Notifications',
+      'settings.notify.conflict': 'On conflict',
+      'settings.notify.conflict.hint': 'Persistent notification in Home Assistant',
+      'settings.notify.pr': 'When the sync PR is waiting for a merge',
+      'settings.notify.pr.hint': 'One reminder per PR',
+      'settings.notify.prhours': 'Remind after',
+      'settings.prhours.6': '6 hours',
+      'settings.prhours.24': '24 hours',
+      'settings.prhours.72': '3 days',
+      'settings.notify.restart': 'When a restart is pending',
+      'settings.notify.restart.hint': 'After changes from main have been applied',
+      'settings.profile.title': 'Profile',
+      'settings.profile.active': 'Active profile: {profile}',
+      'settings.profile.change': 'Change profile',
+      'settings.connection.title': 'Connection',
+      'settings.connection.repo': 'Repository: {repo} · Main branch: {main}',
+      'settings.connection.syncbranch': 'Sync branch:',
+      'settings.connection.syncbranch.note': '— change it by running the setup again',
+      'error.invalid_token': 'GitHub did not accept the token. Please check its value and permissions.',
+      'error.forbidden': 'GitHub denied access — is the token missing permissions?',
+      'error.network': 'GitHub is not reachable right now. Please try again later.',
+      'error.branches_equal': 'Main and sync branch have to be different.',
+      'error.invalid_repo': 'Please select a repository.',
+      'error.missing_name': 'Please enter a repository name.',
+      'error.missing_token': 'Please enter a token.',
+      'error.remote_mismatch': 'The configuration directory points at a different remote.',
+      'error.not_configured': 'Setup incomplete.',
+      'error.not_connected': 'Not connected to GitHub — please connect again.',
+      'error.git_failed': 'A git command failed — details are in the app log.',
+      'error.config_missing': 'Configuration directory not found.',
+      'error.unknown': 'Error: {code}'
+    }
+  };
+
+  var lang = LANGS[0];
+
+  function t(key, vars) {
+    var dict = I18N[lang] || I18N[LANGS[0]];
+    var text = dict[key];
+    if (text === undefined) text = I18N[LANGS[0]][key];
+    if (text === undefined) return key;
+    if (vars) {
+      Object.keys(vars).forEach(function (name) {
+        text = text.split('{' + name + '}').join(vars[name]);
+      });
+    }
+    return text;
+  }
+
+  function detectLang() {
+    var preferred = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+    return preferred.toLowerCase().indexOf('de') === 0 ? 'de' : 'en';
+  }
+
+  function fill(attr, apply) {
+    var nodes = document.querySelectorAll('[' + attr + ']');
+    Array.prototype.forEach.call(nodes, function (node) {
+      apply(node, t(node.getAttribute(attr)));
+    });
+  }
+
+  function applyStatic() {
+    document.documentElement.lang = lang;
+    fill('data-i18n', function (node, text) { node.textContent = text; });
+    // Only ever our own dictionary entries — no user input reaches innerHTML.
+    fill('data-i18n-html', function (node, text) { node.innerHTML = text; });
+    fill('data-i18n-placeholder', function (node, text) { node.placeholder = text; });
+    fill('data-i18n-title', function (node, text) { node.title = text; });
+    Array.prototype.forEach.call(el('langseg').children, function (btn) {
+      btn.className = btn.dataset.lang === lang ? 'on' : '';
+    });
+  }
+
+  function setLang(next, persist) {
+    lang = LANGS.indexOf(next) >= 0 ? next : LANGS[0];
+    applyStatic();
+    // The backend writes notifications and the sync PR in the same language.
+    // Callers that re-render afterwards must await this — otherwise boot()
+    // reads the old language back from the API and undoes the switch.
+    if (!persist) return Promise.resolve();
+    return api('POST', 'api/sync/settings', { language: lang }).catch(function () {});
+  }
+
+  function timeLabel(seconds) {
+    if (!seconds) return '–';
+    return new Date(seconds * 1000)
+      .toLocaleTimeString(lang === 'de' ? 'de-DE' : undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function profileLabel(name) {
+    var key = 'profile.' + name + '.name';
+    var label = t(key);
+    return label === key ? name : label;
+  }
+
+  function profileSummary(profile) {
+    if (!profile) return '';
+    return profileLabel(profile.name) + (profile.apps_mode === 'lockfile' ? t('setup.lockfile') : '');
+  }
+
   var GROUPS = [
-    { key: 'core', name: 'Kern-Konfiguration', files: 'configuration.yaml · automations.yaml · scripts.yaml · scenes.yaml' },
-    { key: 'blueprints', name: 'Blueprints & Dashboards (YAML)', files: 'blueprints/ · dashboards/' },
-    { key: 'esphome', name: 'ESPHome', files: 'esphome/ — ohne esphome/secrets.yaml' },
-    { key: 'themes_www', name: 'Themes & Web-Assets', files: 'themes/ · www/' },
-    { key: 'apps', name: 'Anwendungen', files: 'custom_components/', seg: true },
-    { key: 'ui_export', name: 'UI-verwaltete Einstellungen', files: 'Bereinigter Export ausgewählter .storage-Inhalte', exp: true }
+    { key: 'core' },
+    { key: 'blueprints' },
+    { key: 'esphome' },
+    { key: 'themes_www' },
+    { key: 'apps', seg: true },
+    { key: 'ui_export', exp: true }
   ];
-  var PROFILES = [
-    { key: 'eigene_gitignore', name: 'Eigene .gitignore', desc: 'Deine .gitignore bestimmt den Umfang — du pflegst sie selbst.' },
-    { key: 'komplett', name: 'Komplett', desc: 'Alle Dateigruppen inklusive vollständigem Anwendungs-Code.' },
-    { key: 'ohne_anwendungen', name: 'Ohne Anwendungen', desc: 'Konfiguration ja — Anwendungen nur als Versions-Lockfile.' },
-    { key: 'nur_kern', name: 'Nur Kern-Konfiguration', desc: 'Nur die zentralen YAML-Dateien.' },
-    { key: 'benutzerdefiniert', name: 'Benutzerdefiniert', desc: 'Dateigruppen frei zusammenstellen.' }
-  ];
+  var PROFILES = ['eigene_gitignore', 'komplett', 'ohne_anwendungen', 'nur_kern', 'benutzerdefiniert'];
   var PRESETS = {
     komplett: { groups: { core: true, blueprints: true, esphome: true, themes_www: true, apps: true, ui_export: false }, apps_mode: 'full' },
     ohne_anwendungen: { groups: { core: true, blueprints: true, esphome: true, themes_www: true, apps: true, ui_export: false }, apps_mode: 'lockfile' },
     nur_kern: { groups: { core: true, blueprints: false, esphome: false, themes_www: false, apps: false, ui_export: false }, apps_mode: 'lockfile' },
     eigene_gitignore: { groups: {}, apps_mode: null }
-  };
-  var PROFILE_LABELS = {
-    eigene_gitignore: 'Eigene .gitignore', komplett: 'Komplett', ohne_anwendungen: 'Ohne Anwendungen',
-    nur_kern: 'Nur Kern-Konfiguration', benutzerdefiniert: 'Benutzerdefiniert'
-  };
-  var ERRORS = {
-    invalid_token: 'Der Token wurde von GitHub nicht akzeptiert. Bitte prüfe Wert und Berechtigungen.',
-    forbidden: 'GitHub hat den Zugriff verweigert — fehlen dem Token Berechtigungen?',
-    network: 'GitHub ist gerade nicht erreichbar. Bitte später erneut versuchen.',
-    branches_equal: 'Main- und Sync-Branch müssen unterschiedlich sein.',
-    invalid_repo: 'Bitte ein Repository auswählen.',
-    missing_name: 'Bitte einen Repo-Namen angeben.',
-    missing_token: 'Bitte einen Token eingeben.',
-    remote_mismatch: 'Das Konfigurationsverzeichnis zeigt auf ein anderes Remote.',
-    not_configured: 'Einrichtung unvollständig.',
-    git_failed: 'Ein Git-Befehl ist fehlgeschlagen — Details im App-Protokoll.',
-    config_missing: 'Konfigurationsverzeichnis nicht gefunden.'
   };
 
   var el = function (id) { return document.getElementById(id); };
@@ -548,9 +940,15 @@
     });
   }
 
+  function errorText(code) {
+    var key = 'error.' + code;
+    var text = t(key);
+    return text === key ? t('error.unknown', { code: code }) : text;
+  }
+
   function showError(id, err) {
     var box = el(id);
-    box.textContent = ERRORS[err.code] || ('Fehler: ' + (err.code || err.message));
+    box.textContent = errorText(err.code || err.message);
     box.classList.remove('hidden');
   }
 
@@ -575,6 +973,9 @@
 
   function boot() {
     api('GET', 'api/setup').then(function (setup) {
+      // No language picked yet -> follow the browser and remember that choice.
+      if (setup.language) setLang(setup.language, false);
+      else setLang(detectLang(), true);
       var login = setup.github && setup.github.login;
       show(setup.step, login);
       if (setup.step === 2) loadRepos();
@@ -582,6 +983,20 @@
       if (setup.step === 0) { renderSummary(setup); loadSync(); }
     });
   }
+
+  Array.prototype.forEach.call(el('langseg').children, function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.dataset.lang === lang) return;
+      var inSettings = !el('viewsettings').classList.contains('hidden');
+      var inProfiles = !el('view3').classList.contains('hidden');
+      setLang(btn.dataset.lang, true).then(function () {
+        // Re-render the current view so the dynamic texts follow along.
+        if (inSettings) showSettings();
+        else if (inProfiles) renderProfiles();
+        else boot();
+      });
+    });
+  });
 
   // ---- Schritt 1
   el('connect').addEventListener('click', function () {
@@ -601,7 +1016,7 @@
       repos.forEach(function (repo) {
         var opt = document.createElement('option');
         opt.value = repo.full_name;
-        opt.textContent = repo.full_name + (repo.private ? ' (privat)' : '');
+        opt.textContent = repo.full_name + (repo.private ? t('step2.repo.private') : '');
         opt.dataset.def = repo.default_branch;
         select.appendChild(opt);
       });
@@ -664,29 +1079,29 @@
   function renderProfiles() {
     var wrap = el('profiles');
     wrap.innerHTML = '';
-    PROFILES.forEach(function (profile) {
+    PROFILES.forEach(function (key) {
       var card = document.createElement('div');
-      card.className = 'profile' + (state.profile === profile.key ? ' selected' : '');
+      card.className = 'profile' + (state.profile === key ? ' selected' : '');
       var name = document.createElement('div');
       name.className = 'pname';
-      name.textContent = profile.name;
+      name.textContent = t('profile.' + key + '.name');
       var desc = document.createElement('div');
       desc.className = 'pdesc';
-      desc.textContent = profile.desc;
+      desc.textContent = t('profile.' + key + '.desc');
       card.appendChild(name);
       card.appendChild(desc);
-      if (profile.key === state.recommended) {
+      if (key === state.recommended) {
         var rec = document.createElement('span');
         rec.className = 'chip ok';
         rec.style.alignSelf = 'flex-start';
-        rec.textContent = 'Empfohlen';
+        rec.textContent = t('profile.recommended');
         card.appendChild(rec);
       }
       card.addEventListener('click', function () {
-        state.profile = profile.key;
-        if (PRESETS[profile.key]) {
-          state.groups = Object.assign({}, PRESETS[profile.key].groups);
-          state.apps_mode = PRESETS[profile.key].apps_mode;
+        state.profile = key;
+        if (PRESETS[key]) {
+          state.groups = Object.assign({}, PRESETS[key].groups);
+          state.apps_mode = PRESETS[key].apps_mode;
         }
         renderProfiles();
       });
@@ -722,17 +1137,17 @@
       text.className = 'grow';
       var name = document.createElement('div');
       name.className = 'gname';
-      name.textContent = group.name;
+      name.textContent = t('group.' + group.key + '.name');
       if (group.exp) {
         var chip = document.createElement('span');
         chip.className = 'chip exp';
-        chip.textContent = 'EXPERIMENTELL';
+        chip.textContent = t('group.experimental');
         chip.style.marginLeft = '8px';
         name.appendChild(chip);
       }
       var files = document.createElement('div');
       files.className = 'gfiles mono';
-      files.textContent = group.files;
+      files.textContent = t('group.' + group.key + '.files');
       text.appendChild(name);
       text.appendChild(files);
       row.appendChild(check);
@@ -740,13 +1155,13 @@
       if (group.seg) {
         var seg = document.createElement('div');
         seg.className = 'seg';
-        [['lockfile', 'Nur Lockfile'], ['full', 'Vollständig']].forEach(function (mode) {
+        ['lockfile', 'full'].forEach(function (mode) {
           var btn = document.createElement('button');
           btn.type = 'button';
-          btn.textContent = mode[1];
-          btn.className = state.apps_mode === mode[0] ? 'on' : '';
+          btn.textContent = t('group.apps.' + mode);
+          btn.className = state.apps_mode === mode ? 'on' : '';
           btn.disabled = !custom;
-          btn.addEventListener('click', function () { state.apps_mode = mode[0]; renderGroups(custom); });
+          btn.addEventListener('click', function () { state.apps_mode = mode; renderGroups(custom); });
           seg.appendChild(btn);
         });
         row.appendChild(seg);
@@ -772,14 +1187,14 @@
 
   // ---- Dashboard
   function renderSummary(setup) {
-    window.__profileName = setup.profile.name;
-    el('sumrepo').textContent = 'Repository: ' + setup.repo.full_name +
-      ' · Main: ' + setup.repo.main_branch + ' · Sync: ' + setup.repo.sync_branch;
-    el('sumprofile').textContent = 'Profil: ' + (PROFILE_LABELS[setup.profile.name] || setup.profile.name) +
-      (setup.profile.apps_mode === 'lockfile' ? ' · Anwendungen als Lockfile' : '');
+    window.__profile = setup.profile;
+    el('sumrepo').textContent = t('setup.repo', {
+      repo: setup.repo.full_name, main: setup.repo.main_branch, sync: setup.repo.sync_branch
+    });
+    el('sumprofile').textContent = t('setup.profile', { profile: profileSummary(setup.profile) });
   }
   el('disconnect').addEventListener('click', function () {
-    if (window.confirm('Verbindung zu GitHub trennen? Repo- und Profil-Einstellungen werden zurückgesetzt.')) {
+    if (window.confirm(t('disconnect.confirm'))) {
       api('DELETE', 'api/setup/token').then(boot);
     }
   });
@@ -804,14 +1219,12 @@
     el('dashcols').classList.toggle('hidden', need);
     el('conflictbanner').classList.add('hidden');
     if (!need) return;
-    var messages = {
-      not_a_repo: 'Deine Konfiguration ist noch kein Git-Repository. Beim Koppeln wird der Main-Branch als Ausgangsbasis übernommen — lokale Unterschiede bleiben als Änderungen erhalten und wandern in den Sync-PR.',
-      no_origin: 'Das Repository hat noch kein Remote. Beim Koppeln wird dein gewähltes GitHub-Repo als Remote eingerichtet.',
-      remote_mismatch: 'Das Konfigurationsverzeichnis zeigt auf ein anderes Remote' + (s.current_remote ? ' (' + s.current_remote + ')' : '') + '. Zum Koppeln muss es auf dein gewähltes Repo umgestellt werden.',
-      wrong_branch: 'Die Konfiguration ist noch nicht auf dem Sync-Branch. Beim Koppeln wechselt Git Sync auf ' + s.repo.sync_branch + ' — am Arbeitsstand ändert sich nichts.',
-      config_missing: 'Konfigurationsverzeichnis nicht gefunden.'
-    };
-    el('couplemsg').textContent = messages[s.coupling] || s.coupling;
+    var key = 'couple.' + s.coupling;
+    var message = t(key, {
+      remote: s.current_remote ? ' (' + s.current_remote + ')' : '',
+      branch: s.repo ? s.repo.sync_branch : ''
+    });
+    el('couplemsg').textContent = message === key ? s.coupling : message;
     el('coupleforce').classList.toggle('hidden', s.coupling !== 'remote_mismatch');
     el('couplebtn').classList.toggle('hidden', s.coupling === 'remote_mismatch');
   }
@@ -827,17 +1240,18 @@
   function renderStatus(s) {
     var behind = s.incoming_count || 0;
     el('branchchip').textContent = s.repo.sync_branch;
-    el('statustitle').textContent = behind === 0 ? 'Auf Stand mit ' + s.repo.main_branch : behind + ' Commit(s) hinter ' + s.repo.main_branch;
-    var when = s.last_pull ? new Date(s.last_pull * 1000).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '–';
-    el('statusmeta').textContent = 'Letzter Abgleich: ' + when + ' Uhr · Profil: ' + (PROFILE_LABELS[(syncData && lastProfileName()) || ''] || lastProfileName() || '');
+    el('statustitle').textContent = behind === 0
+      ? t('status.uptodate', { branch: s.repo.main_branch })
+      : t('status.behind', { count: behind, branch: s.repo.main_branch });
+    el('statusmeta').textContent = t('status.meta', {
+      time: timeLabel(s.last_pull),
+      profile: profileSummary(window.__profile)
+    });
     var sw = el('autopull');
     sw.classList.toggle('on', !!s.settings.auto_pull);
     sw.onclick = function () {
       api('POST', 'api/sync/settings', { auto_pull: !s.settings.auto_pull }).then(loadSync);
     };
-  }
-  function lastProfileName() {
-    return (window.__profileName || '');
   }
 
   function renderChanges(s) {
@@ -845,7 +1259,7 @@
     var count = el('changecount');
     var box = el('commitbox');
     if (!s.changes || !s.changes.length) {
-      list.textContent = 'Keine lokalen Änderungen — alles committet.';
+      list.textContent = t('changes.empty');
       list.classList.add('empty');
       count.classList.add('hidden');
       box.classList.add('hidden');
@@ -853,7 +1267,7 @@
     }
     count.classList.remove('hidden');
     count.className = 'chip warn';
-    count.textContent = s.changes.length + ' Datei(en)';
+    count.textContent = t('changes.count', { count: s.changes.length });
     list.classList.remove('empty');
     list.innerHTML = '';
     s.changes.slice(0, 8).forEach(function (c) {
@@ -872,7 +1286,7 @@
     if (s.changes.length > 8) {
       var more = document.createElement('div');
       more.className = 'meta';
-      more.textContent = '… und ' + (s.changes.length - 8) + ' weitere';
+      more.textContent = t('changes.more', { count: s.changes.length - 8 });
       list.appendChild(more);
     }
     box.classList.remove('hidden');
@@ -882,9 +1296,9 @@
     var info = el('autocommitinfo');
     if (s.auto_commit_at) {
       var secs = Math.max(0, s.auto_commit_at - Math.floor(Date.now() / 1000));
-      info.textContent = 'Auto-Commit in ~' + Math.ceil(secs / 60) + ' Min.';
+      info.textContent = t('changes.autocommit.in', { minutes: Math.ceil(secs / 60) });
     } else if (!s.settings.auto_commit) {
-      info.textContent = 'Auto-Commit ist aus.';
+      info.textContent = t('changes.autocommit.off');
     } else {
       info.textContent = '';
     }
@@ -906,7 +1320,7 @@
     subject.href = 'https://github.com/' + s.repo.full_name + '/commit/' + c.hash;
     subject.target = '_blank';
     subject.rel = 'noopener';
-    subject.title = 'Commit ' + c.hash + ' auf GitHub ansehen';
+    subject.title = t('commit.link', { hash: c.hash });
     var when = document.createElement('span');
     when.className = 'when';
     when.textContent = c.when;
@@ -926,7 +1340,7 @@
     if (waiting) {
       var errbox = el('prmissingerr');
       errbox.classList.toggle('hidden', !s.pr_error);
-      if (s.pr_error) errbox.textContent = ERRORS[s.pr_error] || ('Fehler: ' + s.pr_error);
+      if (s.pr_error) errbox.textContent = errorText(s.pr_error);
       el('createprbtn').onclick = function () {
         el('createprbtn').disabled = true;
         api('POST', 'api/sync/ensure-pr')
@@ -938,7 +1352,8 @@
     if (!pr) return;
     var conflict = pr.mergeable === false;
     chip.className = 'chip ' + (conflict ? 'err' : (pr.mergeable ? 'ok' : ''));
-    chip.textContent = conflict ? 'Konflikt' : (pr.mergeable ? 'Mergebar' : 'Prüfung läuft …');
+    chip.textContent = conflict ? t('pr.chip.conflict')
+      : (pr.mergeable ? t('pr.chip.mergeable') : t('pr.chip.checking'));
     el('prtitle').textContent = '#' + pr.number + ' · ' + (pr.title || '');
     el('prlink').href = pr.url;
     var wrap = el('prcommits');
@@ -952,7 +1367,7 @@
     var mergebtn = el('mergebtn');
     mergebtn.disabled = conflict;
     mergebtn.onclick = function () {
-      if (!window.confirm('Sync-PR #' + pr.number + ' jetzt in ' + s.repo.main_branch + ' mergen?')) return;
+      if (!window.confirm(t('pr.merge.confirm', { number: pr.number, branch: s.repo.main_branch }))) return;
       mergebtn.disabled = true;
       api('POST', 'api/sync/merge')
         .then(function (result) {
@@ -971,12 +1386,12 @@
     chipEl.classList.toggle('hidden', count === 0);
     el('pullrow').classList.toggle('hidden', count === 0);
     if (count === 0) {
-      list.textContent = 'Auf Stand mit ' + s.repo.main_branch + '.';
+      list.textContent = t('incoming.empty', { branch: s.repo.main_branch });
       list.classList.add('empty');
       return;
     }
     chipEl.className = 'chip';
-    chipEl.textContent = count + ' Commit(s)';
+    chipEl.textContent = t('incoming.count', { count: count });
     list.classList.remove('empty');
     list.innerHTML = '';
     (s.incoming || []).forEach(function (c) {
@@ -1008,9 +1423,10 @@
       bindSelect('set-commitdelay', s.auto_commit_delay, 'auto_commit_delay');
       bindSelect('set-prhours', s.pr_waiting_hours, 'pr_waiting_hours');
       el('set-template').value = s.commit_template;
-      el('set-profile').textContent = 'Aktives Profil: ' + (PROFILE_LABELS[data.profile.name] || data.profile.name) +
-        (data.profile.apps_mode === 'lockfile' ? ' · Anwendungen als Lockfile' : '');
-      el('set-repo').textContent = 'Repository: ' + data.repo.full_name + ' · Main-Branch: ' + data.repo.main_branch;
+      el('set-profile').textContent = t('settings.profile.active', { profile: profileSummary(data.profile) });
+      el('set-repo').textContent = t('settings.connection.repo', {
+        repo: data.repo.full_name, main: data.repo.main_branch
+      });
       el('set-syncbranch').textContent = data.repo.sync_branch;
       state.currentProfile = data.profile;
       el('viewsettings').classList.remove('hidden');
@@ -1051,7 +1467,7 @@
     renderProfiles();
   });
   el('set-disconnect').addEventListener('click', function () {
-    if (window.confirm('Verbindung zu GitHub trennen? Repo- und Profil-Einstellungen werden zurückgesetzt.')) {
+    if (window.confirm(t('disconnect.confirm'))) {
       api('DELETE', 'api/setup/token').then(boot);
     }
   });
@@ -1069,20 +1485,20 @@
     errbox.classList.add('hidden');
     if (check.result === 'ok') {
       chip.className = 'chip ok';
-      chip.textContent = 'Prüfung OK';
-      el('restartmeta').textContent = 'Änderungen aus main sind in der Konfiguration angekommen und die Konfigurationsprüfung (ha core check) war erfolgreich. Ein Neustart aktiviert sie — er startet erst nach deiner Bestätigung.';
+      chip.textContent = t('restart.check.ok');
+      el('restartmeta').textContent = t('restart.meta.ok');
       restart.disabled = false;
     } else if (check.result === 'error') {
       chip.className = 'chip err';
-      chip.textContent = 'Prüfung fehlgeschlagen';
-      el('restartmeta').textContent = 'Änderungen aus main sind angekommen, aber die Konfigurationsprüfung meldet einen Fehler. Bitte erst korrigieren (auf GitHub oder lokal) — der Neustart bleibt so lange gesperrt.';
+      chip.textContent = t('restart.check.error');
+      el('restartmeta').textContent = t('restart.meta.error');
       errbox.textContent = check.message || '';
       errbox.classList.remove('hidden');
       restart.disabled = true;
     } else {
       chip.className = 'chip';
-      chip.textContent = 'Prüfung nicht verfügbar';
-      el('restartmeta').textContent = 'Die Konfigurationsprüfung war nicht erreichbar. Du kannst trotzdem neu starten — auf eigenes Risiko.';
+      chip.textContent = t('restart.check.unavailable');
+      el('restartmeta').textContent = t('restart.meta.unavailable');
       restart.disabled = false;
     }
     el('recheckbtn').onclick = function () {
@@ -1093,12 +1509,10 @@
         .finally(function () { el('recheckbtn').disabled = false; });
     };
     restart.onclick = function () {
-      if (!window.confirm('Home Assistant jetzt neu starten? Automationen und Oberfläche sind dabei kurz nicht verfügbar.')) return;
+      if (!window.confirm(t('restart.confirm'))) return;
       restart.disabled = true;
       api('POST', 'api/sync/restart')
-        .then(function () {
-          el('restartmeta').textContent = 'Neustart läuft — Home Assistant ist gleich wieder da.';
-        })
+        .then(function () { el('restartmeta').textContent = t('restart.running'); })
         .catch(function (err) { showError('dasherr', err); restart.disabled = false; });
     };
   }
@@ -1121,6 +1535,7 @@
       .catch(function (err) { showError('dasherr', err); });
   });
 
+  applyStatic();
   boot();
 })();
 </script>

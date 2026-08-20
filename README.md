@@ -31,6 +31,11 @@ Sync **profiles** control which file groups are versioned — e.g.
 records a version lockfile instead. Secrets (`secrets.yaml`, `.storage/`,
 databases, logs) are always excluded and cannot be opted in.
 
+The panel speaks **German and English** — it follows the browser language on
+first start and carries a DE/EN switch in its header. The chosen language
+also applies to Home Assistant notifications, the sync pull request and the
+automatic commit messages.
+
 ## Status
 
 Early development.
@@ -74,6 +79,13 @@ Build the container image locally:
 
 ```bash
 docker build git-sync/ -t git-sync-dev
+```
+
+Run the test suites (git only, no network required):
+
+```bash
+python3 tests/test_git_ops.py   # the whole git engine against a local bare repo
+python3 tests/test_i18n.py      # German/English dictionaries stay in sync
 ```
 
 CI runs a `home-assistant/builder` test build for all supported

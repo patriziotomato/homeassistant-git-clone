@@ -17,15 +17,29 @@ main, Konflikte werden auf GitHub gelöst (nie in HA).
   oder Implementierungsaufzählungen.
 - Versionierung: 0.x-Phase — Feature-PRs heben die Minor (0.4.0 → 0.5.0),
   reine Fixes die Patch-Stelle.
-- Sprache im Changelog: Englisch (die App soll veröffentlicht werden);
-  UI-Texte der App selbst sind Deutsch.
+- Sprache im Changelog: Englisch (die App soll veröffentlicht werden).
+
+## Zweisprachigkeit — Pflicht bei jedem nutzersichtbaren Text
+
+- Die App ist Deutsch **und** Englisch. Jeder neue nutzersichtbare Text
+  kommt in beide Wörterbücher: Panel-Texte nach `I18N.de` / `I18N.en` in
+  `git-sync/app/static/index.html`, Backend-Texte (Sync-PR,
+  HA-Benachrichtigungen, Commit-Vorlagen) nach `git-sync/app/i18n.py`.
+  Nie einen Text direkt in Markup oder Code schreiben.
+- Die gewählte Sprache gehört zur Instanz (Setting `language`), nicht zum
+  Browser — nur so sind Panel, Benachrichtigungen und PR gleichsprachig.
+  Beim ersten Start entscheidet die Browsersprache.
+- `python3 tests/test_i18n.py` bewacht das: gleiche Schlüssel und gleiche
+  Platzhalter in beiden Sprachen, und jeder im Panel verwendete Schlüssel
+  existiert auch. Fehlt eine Übersetzung, schlägt der Test fehl.
 
 ## Arbeitsweise
 
 - Feature-Branches + PR gegen `main`, Squash-Merge. Nie direkt auf `main`
   pushen (das ist auch das Prinzip der App selbst).
 - Vor jedem PR: `python3 tests/test_git_ops.py` (braucht nur git, kein
-  Netzwerk) — testet die komplette Git-Engine gegen ein lokales Bare-Repo.
+  Netzwerk) — testet die komplette Git-Engine gegen ein lokales Bare-Repo —
+  und `python3 tests/test_i18n.py` (nur Standardbibliothek).
   Zusätzlich den Server lokal starten (README „Local development") und die
   betroffenen Endpunkte kurz durchklicken/curlen.
 - Die CI (`.github/workflows/builder.yaml`) baut nur aarch64 + amd64 —

@@ -23,6 +23,14 @@ branch after a merge triggered from the panel and recreates it with the next
 commit. Leaving GitHub's own automation switched off keeps that lifecycle in
 one place — the app stays the only thing creating and removing the branch.
 
+## Language
+
+The panel is available in **German and English**. On first start it follows
+the language your browser asks for; the **DE / EN** switch in the panel
+header changes it at any time. The choice belongs to the instance, not to
+the browser: Home Assistant notifications, the collecting pull request and
+the automatic commit messages are written in the same language.
+
 ## Current state
 
 This is an early preview (milestone 4): setup wizard, the working sync
@@ -34,11 +42,11 @@ Assistant notifications on conflicts and long-waiting sync PRs.
 
 ## Sync profiles
 
-Presets (Komplett / Ohne Anwendungen / Nur Kern-Konfiguration /
-Benutzerdefiniert) manage the sync scope through `.git/info/exclude` —
-your own `.gitignore` is never modified. The profile **Eigene .gitignore**
-hands the scope over to the repository's own `.gitignore`, editable right
-in the panel; it is the default when the chosen repository already has one.
+Presets (Complete / Without applications / Core configuration only /
+Custom) manage the sync scope through `.git/info/exclude` — your own
+`.gitignore` is never modified. The profile **Your own .gitignore** hands
+the scope over to the repository's own `.gitignore`, editable right in the
+panel; it is the default when the chosen repository already has one.
 In every profile the safety exclusions (`secrets.yaml`, `.storage/`,
 databases, logs, caches) remain built-in and cannot be disabled.
 
