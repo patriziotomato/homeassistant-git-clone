@@ -18,6 +18,13 @@
   file paths or branch names no longer overflow the layout.
 - Buttons and toggles are easier to hit on touch screens, and focusing an
   input field on iOS no longer zooms the whole page.
+- The dashboard card collecting local changes is now called
+  "Änderungen aus HA" / "Changes from HA" (previously "Offener
+  Sync-PR"), making it clearer that it holds the changes made in
+  Home Assistant.
+- The setup wizard and the documentation now point out that GitHub's
+  repository setting "Automatically delete head branches" should stay
+  switched off — Git Sync manages the lifetime of the sync branch itself.
 
 ## 0.6.0
 
