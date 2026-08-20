@@ -7,16 +7,31 @@ main, Konflikte werden auf GitHub gelöst (nie in HA).
 
 ## Änderungsprotokoll — Pflicht bei jedem PR
 
-- Jeder PR mit nutzersichtbarer Änderung ergänzt `git-sync/CHANGELOG.md`
-  **und** hebt `version:` in `git-sync/config.yaml` an — im selben PR.
-  Ohne Versions-Bump bietet Home Assistant kein Update an; der Add-on-Store
-  rendert genau diese CHANGELOG.md im Update-Dialog.
+- Jeder PR mit nutzersichtbarer Änderung ergänzt `git-sync/CHANGELOG.md`.
+  Ohne angehobene `version:` in `git-sync/config.yaml` bietet Home Assistant
+  kein Update an; der Add-on-Store rendert genau diese CHANGELOG.md im
+  Update-Dialog.
+- **Die Zielversion nie selbst festlegen, sondern nachfragen.** Nicht jede
+  Änderung bekommt ein eigenes Release — oft sollen mehrere Features in
+  einem Release zusammenkommen. Also einen begründeten Vorschlag machen
+  (Grundlage ist die Versionierungsregel unten) und fragen, auf welche
+  Version gebucht werden soll. Erst danach Changelog und `version:` anfassen.
+- Je nach Antwort zwei Fälle:
+  - **Eigenes Release** — neuen `## <version>`-Block oben anlegen und
+    `version:` in `git-sync/config.yaml` anheben.
+  - **Auf ein noch unveröffentlichtes Release buchen** — die Stichpunkte in
+    dessen `## <version>`-Block einsortieren (notfalls den Block anlegen),
+    `version:` in `config.yaml` bleibt unangetastet. So sammeln mehrere PRs
+    ein Release an; erst der letzte PR der Serie hebt `version:` an und
+    liefert alles gemeinsam aus. Maßgeblich ist allein `config.yaml`: steht
+    diese Version dort auf `main` schon drin, hat Home Assistant sie bereits
+    als Update angeboten und Nachzügler erreichen niemanden mehr.
 - Format (so, wie Home Assistant es anzeigt): neueste Version oben,
   `## <version>` als Überschrift, darunter Stichpunkte mit `-`.
   Stichpunkte beschreiben, was sich für Nutzer ändert — keine Dateinamen-
   oder Implementierungsaufzählungen.
-- Versionierung: 0.x-Phase — Feature-PRs heben die Minor (0.4.0 → 0.5.0),
-  reine Fixes die Patch-Stelle.
+- Versionierung als Grundlage des Vorschlags: 0.x-Phase — Feature-PRs heben
+  die Minor (0.4.0 → 0.5.0), reine Fixes die Patch-Stelle.
 - Sprache im Changelog: Englisch (die App soll veröffentlicht werden).
 
 ## Zweisprachigkeit — Pflicht bei jedem nutzersichtbaren Text

@@ -14,6 +14,15 @@ Couples your Home Assistant configuration to a GitHub repository.
   you straight there.
 - `secrets.yaml`, `.storage/`, databases and logs are **never** transferred.
 
+## Repository settings on GitHub
+
+Leave GitHub's repository setting **Settings → General → "Automatically
+delete head branches"** switched off for the coupled repository. Git Sync
+manages the lifetime of the sync branch (`ha-sync`) itself: it removes the
+branch after a merge triggered from the panel and recreates it with the next
+commit. Leaving GitHub's own automation switched off keeps that lifecycle in
+one place — the app stays the only thing creating and removing the branch.
+
 ## Language
 
 The panel is available in **German and English**. On first start it follows
