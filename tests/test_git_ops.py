@@ -149,6 +149,58 @@ check("own-gitignore: no custom_components exclude", "custom_components/" not in
 check("own-gitignore: managed block exactly once", exclude.count(git_ops.MARK_BEGIN) == 1)
 check("own-gitignore: no lockfile write", git_ops.write_lockfile(PROFILE_OWN) is False)
 
+# 7) Squash-merged PR (merged on GitHub, branch deleted): the next pull must
+#    not create an empty merge commit that re-imports the merged history and
+#    resurrects the deleted sync branch.
+git_ops.apply_excludes(PROFILE_OA)
+git_ops.write_lockfile(PROFILE_OA)
+sha = git_ops.commit_and_push(None, REPO, "Sync: scenes.yaml", PROFILE_OA)
+check("cycle commit pushed", sha is not None)
+sh("git", "-C", str(WORK), "pull", "origin", "main")
+sh("git", "-C", str(WORK), "fetch", "origin", "ha-sync")
+sh("git", "-C", str(WORK), "merge", "--squash", "origin/ha-sync")
+sh("git", "-C", str(WORK), "-c", "user.name=Remote", "-c", "user.email=r@x",
+   "commit", "-m", "Sync: scenes.yaml (#7)")
+sh("git", "-C", str(WORK), "push", "origin", "main")
+sh("git", "-C", str(WORK), "push", "origin", ":ha-sync")  # GitHub deletes the PR branch
+
+git_ops.fetch(None, REPO)
+code = subprocess.run(["git", "-C", str(CONFIG), "rev-parse", "--verify", "origin/ha-sync"],
+                      capture_output=True).returncode
+check("stale sync tracking ref pruned by fetch", code != 0)
+result = git_ops.integrate(None, REPO)
+check("integrate after squash ok", result == "ok", result)
+check("no empty merge commit — realigned onto squashed main",
+      git_ops.head_sha() == sh("git", "-C", str(CONFIG), "rev-parse", "origin/main"))
+check("no outgoing after squash integrate", git_ops.outgoing_commits(REPO) == [],
+      str(git_ops.outgoing_commits(REPO)))
+check("remote sync branch stays deleted",
+      "ha-sync" not in sh("git", "-C", str(BARE), "branch"))
+check("content intact after realign", (CONFIG / "scenes.yaml").exists())
+
+# 7b) Same cycle, but the branch deletion after the merge failed: the
+#     lingering remote branch (identical content, pre-squash history) is
+#     reset to the clean history instead of merged back in.
+(CONFIG / "timers.yaml").write_text("{}\n")
+git_ops.commit_and_push(None, REPO, "Sync: timers.yaml", PROFILE_OA)
+sh("git", "-C", str(WORK), "pull", "origin", "main")
+sh("git", "-C", str(WORK), "fetch", "origin", "ha-sync")
+sh("git", "-C", str(WORK), "merge", "--squash", "origin/ha-sync")
+sh("git", "-C", str(WORK), "-c", "user.name=Remote", "-c", "user.email=r@x",
+   "commit", "-m", "Sync: timers.yaml (#8)")
+sh("git", "-C", str(WORK), "push", "origin", "main")
+git_ops.realign_after_merge(None, REPO)
+git_ops.fetch(None, REPO)  # branch still on the remote -> tracking ref returns
+result = git_ops.integrate(None, REPO)
+check("integrate with lingering branch ok", result == "ok", result)
+check("no empty merge with lingering branch",
+      git_ops.head_sha() == sh("git", "-C", str(CONFIG), "rev-parse", "origin/main"))
+check("lingering remote branch reset to main",
+      sh("git", "-C", str(BARE), "rev-parse", "ha-sync")
+      == sh("git", "-C", str(BARE), "rev-parse", "main"))
+check("no outgoing after branch reset", git_ops.outgoing_commits(REPO) == [],
+      str(git_ops.outgoing_commits(REPO)))
+
 print()
 print("FAILED: " + (", ".join(FAILED) if FAILED else "none"))
 sys.exit(1 if FAILED else 0)

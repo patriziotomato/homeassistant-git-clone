@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.2
+
+- Fix: after the collecting pull request was merged, the next pull kept
+  creating empty merge commits that re-imported the already-merged history —
+  resurrecting the just-deleted sync branch on GitHub and listing old
+  commits in the next pull request. Merges that would bring no changes are
+  now skipped entirely and the sync branch restarts cleanly from main.
+- The restart reminder and the automatic configuration check now only
+  trigger when a pull actually changed files, not on history-only updates.
+
 ## 0.5.1
 
 - Fix: when creating the collecting pull request failed once (network
