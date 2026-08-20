@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse
 
 import gh
 import git_ops
+import i18n
 import store
 import sync
 
@@ -66,7 +67,7 @@ PROFILES = {
 
 
 def _github_error(err: gh.GitHubError) -> HTTPException:
-    LOG.warning("GitHub-Fehler (%s): %s", err.kind, err.detail or "-")
+    LOG.warning("GitHub error (%s): %s", err.kind, err.detail or "-")
     status = {"invalid_token": 401, "forbidden": 403, "network": 502}.get(err.kind, 502)
     return HTTPException(status_code=status, detail=err.kind)
 
@@ -101,6 +102,9 @@ def setup_state() -> dict:
         "github": {"connected": bool(github.get("token")), "login": github.get("login")},
         "repo": repo,
         "profile": profile,
+        # Empty until a language was picked — the panel then offers the one
+        # the browser asks for and stores that choice.
+        "language": state.get("sync_settings", {}).get("language", ""),
     }
 
 
@@ -165,7 +169,7 @@ def set_profile(payload: dict = Body(...)) -> dict:
 # ------------------------------------------------------------------ sync
 
 def _git_error(err: git_ops.GitError) -> HTTPException:
-    LOG.warning("Git-Fehler (%s): %s", err.kind, err.detail or "-")
+    LOG.warning("Git error (%s): %s", err.kind, err.detail or "-")
     status = {"remote_mismatch": 409, "dirty": 409, "config_missing": 500}.get(err.kind, 500)
     return HTTPException(status_code=status, detail=err.kind)
 
@@ -222,7 +226,7 @@ def sync_merge() -> dict:
 def settings_get() -> dict:
     state = store.load()
     return {
-        "settings": {**sync.DEFAULT_SETTINGS, **state.get("sync_settings", {})},
+        "settings": sync.effective_settings(state.get("sync_settings")),
         "repo": state.get("repo"),
         "profile": state.get("profile"),
         "github": {"login": state.get("github", {}).get("login")},
@@ -267,11 +271,20 @@ def sync_settings(payload: dict = Body(...)) -> dict:
             settings[key] = max(15, int(payload[key]))
     if "pr_waiting_hours" in payload:
         settings["pr_waiting_hours"] = min(168, max(1, int(payload["pr_waiting_hours"])))
+    if "language" in payload:
+        language = str(payload["language"])
+        if language not in i18n.LANGUAGES:
+            raise HTTPException(status_code=400, detail="unknown_language")
+        # A template still sitting at the old language's default follows the
+        # switch; anything the user typed themselves stays untouched.
+        if settings.get("commit_template") == i18n.t(settings.get("language"), "commit.template"):
+            settings["commit_template"] = ""
+        settings["language"] = language
     if "commit_template" in payload:
-        template = str(payload["commit_template"]).strip()[:120]
-        settings["commit_template"] = template or sync.DEFAULT_SETTINGS["commit_template"]
+        # Empty means "follow the language default" (see sync.effective_settings).
+        settings["commit_template"] = str(payload["commit_template"]).strip()[:120]
     store.update(sync_settings=settings)
-    return settings
+    return sync.effective_settings(settings)
 
 
 # ------------------------------------------------------------- .gitignore
