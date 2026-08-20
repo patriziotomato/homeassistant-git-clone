@@ -1,7 +1,10 @@
 # Changelog
 
-## 0.5.2
+## 0.6.0
 
+- Commits listed on the dashboard (in the collecting pull request and under
+  incoming changes) now link to the commit on GitHub, so the actual file
+  changes are one click away.
 - Fix: after the collecting pull request was merged, the next pull kept
   creating empty merge commits that re-imported the already-merged history —
   resurrecting the just-deleted sync branch on GitHub and listing old
