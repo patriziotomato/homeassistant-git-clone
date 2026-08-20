@@ -17,7 +17,7 @@ SUPERVISOR = os.environ.get("SUPERVISOR_URL", "http://supervisor")
 def _call(service: str, payload: dict) -> bool:
     token = os.environ.get("SUPERVISOR_TOKEN")
     if not token:
-        LOG.info("SUPERVISOR_TOKEN fehlt — Benachrichtigung übersprungen (%s)", service)
+        LOG.info("SUPERVISOR_TOKEN missing — notification skipped (%s)", service)
         return False
     try:
         response = httpx.post(
@@ -29,7 +29,7 @@ def _call(service: str, payload: dict) -> bool:
         response.raise_for_status()
         return True
     except httpx.HTTPError as err:
-        LOG.warning("Benachrichtigung fehlgeschlagen (%s): %s", service, err)
+        LOG.warning("Notification failed (%s): %s", service, err)
         return False
 
 
@@ -63,7 +63,7 @@ def core_restart() -> bool:
     """Restart Home Assistant Core (`ha core restart`)."""
     token = os.environ.get("SUPERVISOR_TOKEN")
     if not token:
-        LOG.info("SUPERVISOR_TOKEN fehlt — Neustart übersprungen")
+        LOG.info("SUPERVISOR_TOKEN missing — restart skipped")
         return False
     try:
         response = httpx.post(
@@ -76,7 +76,7 @@ def core_restart() -> bool:
     except httpx.TimeoutException:
         return True  # restart initiated; core going down can drop the reply
     except httpx.HTTPError as err:
-        LOG.warning("Neustart fehlgeschlagen: %s", err)
+        LOG.warning("Restart failed: %s", err)
         return False
 
 
