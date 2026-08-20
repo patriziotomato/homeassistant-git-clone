@@ -309,6 +309,13 @@ def outgoing_commits(repo_cfg: dict, limit: int = 10) -> list[dict]:
     return commits
 
 
+def outgoing_files(repo_cfg: dict) -> list[str]:
+    """Paths the sync branch changes relative to main — the PR's diff."""
+    code, out, _ = _git("diff", "--name-only",
+                        f"origin/{repo_cfg['main_branch']}...HEAD")
+    return out.splitlines() if code == 0 else []
+
+
 def _is_ancestor(ancestor: str, descendant: str) -> bool:
     code, _, _ = _git("merge-base", "--is-ancestor", ancestor, descendant)
     return code == 0

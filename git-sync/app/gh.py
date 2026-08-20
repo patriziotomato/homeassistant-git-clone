@@ -108,12 +108,18 @@ def create_pr(token: str, full_name: str, head: str, base: str, title: str, body
     return _pr_fields(data)
 
 
-def merge_pr(token: str, full_name: str, number: int, method: str = "squash") -> dict:
+def merge_pr(token: str, full_name: str, number: int, method: str = "squash",
+             commit_title: str | None = None) -> dict:
+    # commit_title becomes the first line of the squash commit on main; the
+    # body stays GitHub's default (the list of squashed commits).
+    payload: dict = {"merge_method": method}
+    if commit_title:
+        payload["commit_title"] = commit_title
     data = _request(
         token,
         "PUT",
         f"/repos/{full_name}/pulls/{number}/merge",
-        json={"merge_method": method},
+        json=payload,
     ).json()
     return {"merged": bool(data.get("merged")), "sha": data.get("sha")}
 

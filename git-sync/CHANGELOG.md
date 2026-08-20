@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0
+
+- Before merging the sync PR, the panel now asks for the text of the merge
+  commit: the merge button opens an input prefilled with a suggestion
+  (summarizing the PR's changed files, plus the PR number), and the text you
+  confirm becomes the headline of the squash commit on main.
+
 ## 0.7.2
 
 - Fix: button labels no longer overflow the card frame — when a card is too
