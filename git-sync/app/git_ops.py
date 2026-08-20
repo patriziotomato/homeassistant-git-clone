@@ -78,7 +78,8 @@ def _auth_args(token: str | None) -> list[str]:
     ]
 
 
-def _git(*args: str, token: str | None = None, timeout: int = 120) -> tuple[int, str, str]:
+def _git(*args: str, token: str | None = None, timeout: int = 120,
+         strip: bool = True) -> tuple[int, str, str]:
     cmd = ["git", "-C", CONFIG_DIR, "-c", f"safe.directory={CONFIG_DIR}"]
     cmd += _auth_args(token)
     cmd += list(args)
@@ -86,7 +87,7 @@ def _git(*args: str, token: str | None = None, timeout: int = 120) -> tuple[int,
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     except (OSError, subprocess.TimeoutExpired) as err:
         return 1, "", str(err)
-    return result.returncode, result.stdout.strip(), result.stderr.strip()
+    return result.returncode, result.stdout.strip() if strip else result.stdout, result.stderr.strip()
 
 
 def _must(*args: str, token: str | None = None, timeout: int = 120) -> str:
@@ -239,10 +240,14 @@ def write_lockfile(profile: dict) -> bool:
 
 
 def local_changes() -> list[dict]:
-    code, out, _ = _git("status", "--porcelain")
-    if code != 0 or not out:
+    # Unstripped: an unstaged modification (" M …") in the first line starts
+    # with a space — stripping it would shift the columns and eat the first
+    # character of the path.
+    code, out, _ = _git("status", "--porcelain", strip=False)
+    if code != 0:
         return []
-    return [{"state": line[:2].strip() or "??", "path": line[3:]} for line in out.splitlines()]
+    return [{"state": line[:2].strip() or "??", "path": line[3:]}
+            for line in out.splitlines() if line]
 
 
 def commit_and_push(token: str, repo_cfg: dict, message: str, profile: dict) -> str | None:
@@ -263,7 +268,16 @@ def fetch(token: str, repo_cfg: dict) -> None:
         _must("fetch", "origin", repo_cfg["main_branch"], token=token, timeout=300)
         # The sync branch only exists on the remote after the first push —
         # a missing ref must not fail the whole fetch.
-        _git("fetch", "origin", repo_cfg["sync_branch"], token=token, timeout=300)
+        sync = repo_cfg["sync_branch"]
+        code, _, _ = _git("fetch", "origin", sync, token=token, timeout=300)
+        if code != 0:
+            # Deleted on the remote (PR merge)? Then drop the stale tracking
+            # ref, or integrate() would merge the already-merged history back
+            # in — an empty merge commit that resurrects the branch on GitHub.
+            ls_code, _, _ = _git("ls-remote", "--exit-code", "origin",
+                                 f"refs/heads/{sync}", token=token, timeout=60)
+            if ls_code == 2:
+                _git("update-ref", "-d", f"refs/remotes/origin/{sync}")
 
 
 def incoming_count(repo_cfg: dict) -> int:
@@ -295,11 +309,21 @@ def outgoing_commits(repo_cfg: dict, limit: int = 10) -> list[dict]:
     return commits
 
 
+def _is_ancestor(ancestor: str, descendant: str) -> bool:
+    code, _, _ = _git("merge-base", "--is-ancestor", ancestor, descendant)
+    return code == 0
+
+
 def integrate(token: str, repo_cfg: dict) -> str:
     """Bring origin/sync and origin/main into the local sync branch.
 
     Returns ok | conflict. A dirty tree must be committed by the caller
     first (commit early is the whole philosophy).
+
+    A merge that would bring no content — identical trees, diverged history,
+    the signature of a squash-merged PR — is skipped: it would only write an
+    empty merge commit that re-imports the already-merged commits into the
+    next PR.
     """
     sync = repo_cfg["sync_branch"]
     main = repo_cfg["main_branch"]
@@ -308,17 +332,30 @@ def integrate(token: str, repo_cfg: dict) -> str:
             raise GitError("dirty", "uncommitted changes")
         # GitHub-side updates of the PR branch (e.g. a conflict resolved in
         # the web editor) come first…
-        code, _, _ = _git("rev-parse", "--verify", f"origin/{sync}")
+        code, remote_sync, _ = _git("rev-parse", "--verify", f"origin/{sync}")
         if code == 0:
-            merge_code, _, err = _git(*COMMIT_IDENT, "merge", "--no-edit", f"origin/{sync}")
+            if _tree_of(f"origin/{sync}") == tree_hash():
+                if not _is_ancestor(f"origin/{sync}", "HEAD"):
+                    # The remote branch carries our content under stale
+                    # pre-squash history (branch deletion after the PR merge
+                    # never happened): reset it to the clean local history.
+                    _git("push", f"--force-with-lease={sync}:{remote_sync}",
+                         "origin", sync, token=token, timeout=300)
+            else:
+                merge_code, _, err = _git(*COMMIT_IDENT, "merge", "--no-edit", f"origin/{sync}")
+                if merge_code != 0:
+                    _git("merge", "--abort")
+                    return "conflict"
+        # …then main itself.
+        if _tree_of(f"origin/{main}") == tree_hash() and not _is_ancestor(f"origin/{main}", "HEAD"):
+            # Same content as main, diverged history: our commits arrived
+            # there as a squash — restart the branch from main.
+            _must("reset", "--hard", f"origin/{main}")
+        else:
+            merge_code, _, err = _git(*COMMIT_IDENT, "merge", "--no-edit", f"origin/{main}")
             if merge_code != 0:
                 _git("merge", "--abort")
                 return "conflict"
-        # …then main itself.
-        merge_code, _, err = _git(*COMMIT_IDENT, "merge", "--no-edit", f"origin/{main}")
-        if merge_code != 0:
-            _git("merge", "--abort")
-            return "conflict"
         # If the merge produced commits, keep the PR branch on GitHub current.
         code, out, _ = _git("rev-list", "--count", f"origin/{sync}..HEAD")
         if code == 0 and out.isdigit() and int(out) > 0:
@@ -338,6 +375,9 @@ def realign_after_merge(token: str, repo_cfg: dict) -> None:
             stashed = True
         try:
             _must("checkout", "-B", sync, f"origin/{main}")
+            # The merge flow just deleted the remote sync branch; drop the
+            # tracking ref so the pre-squash history is never merged back in.
+            _git("update-ref", "-d", f"refs/remotes/origin/{sync}")
         finally:
             if stashed:
                 _git("stash", "pop")
@@ -350,6 +390,11 @@ def head_sha() -> str | None:
 
 def tree_hash() -> str | None:
     code, out, _ = _git("rev-parse", "HEAD^{tree}")
+    return out if code == 0 else None
+
+
+def _tree_of(ref: str) -> str | None:
+    code, out, _ = _git("rev-parse", f"{ref}^{{tree}}")
     return out if code == 0 else None
 
 
