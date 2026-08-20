@@ -49,6 +49,7 @@
     font-size: 14px; font-family: inherit; background: #fff; color: #212121;
   }
   input[type=text], input[type=password], select { height: 44px; }
+  #newrepo { width: 260px; height: 36px; }
   textarea { padding: 10px 14px; font-family: 'Roboto Mono', ui-monospace, monospace; font-size: 13px; line-height: 1.5; resize: vertical; }
   input:focus, select:focus, textarea:focus { outline: none; border-color: #03a9f4; }
   .btn {
@@ -63,6 +64,7 @@
   .btn.text:disabled { background: transparent; color: #9e9e9e; }
   .btn.text.danger { color: #c62828; }
   .file { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+  .file .mono { min-width: 0; overflow-wrap: anywhere; }
   .badge {
     display: inline-flex; align-items: center; justify-content: center;
     width: 22px; height: 22px; border-radius: 4px; font-size: 12px; font-weight: 700;
@@ -126,6 +128,7 @@
   .seg button.on { background: #e1f5fe; color: #0277bd; }
   .seg button + button { border-left: 1px solid #bdbdbd; }
   .switch { position: relative; width: 36px; height: 14px; flex-shrink: 0; cursor: pointer; }
+  .switch::before { content: ''; position: absolute; top: -13px; bottom: -13px; left: -8px; right: -8px; }
   .switch .track { width: 36px; height: 14px; border-radius: 7px; background: rgba(0,0,0,0.26); }
   .switch .thumb {
     position: absolute; top: -3px; left: 0; width: 20px; height: 20px; border-radius: 50%;
@@ -136,6 +139,35 @@
   .commit { display: flex; align-items: center; gap: 10px; font-size: 13px; }
   .commit .when { color: #9e9e9e; white-space: nowrap; }
   .hidden { display: none !important; }
+
+  /* Schmale Bildschirme (Handy, HA-Companion-App) */
+  @media (max-width: 760px) {
+    .topbar { position: sticky; top: 0; z-index: 10; padding: 0 16px; }
+    .topbar .chip { min-width: 0; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 40vw; }
+    main { padding: 16px 12px; }
+    .card { padding: 16px; }
+    .cols { flex-direction: column; align-items: stretch; }
+    .col { flex-basis: auto; }
+    .row { flex-wrap: wrap; }
+    .row.actions { justify-content: flex-end; }
+    .row > .chip { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
+    .btn { white-space: normal; height: auto; min-height: 44px; padding: 8px 16px; }
+    /* 16px verhindert den Auto-Zoom von iOS beim Fokussieren */
+    input[type=text], input[type=password], select, textarea { font-size: 16px; }
+    #newrepo { width: auto; height: 44px; flex: 1 1 140px; min-width: 0; }
+    .file { align-items: flex-start; }
+    .row > .switch + div { flex: 1 1 0; min-width: 0; }
+    .group { flex-wrap: wrap; }
+    .group .grow { flex: 1 1 0; min-width: 0; }
+    .group .gfiles { overflow-wrap: anywhere; }
+    .group .seg { flex: 1 1 100%; margin-left: 30px; }
+    .group .seg button { flex: 1 1 0; }
+    .seg button { padding: 10px 14px; }
+    .step { width: auto; flex: 1 1 0; min-width: 0; }
+    .step .name { font-size: 11px; text-align: center; }
+    .stepline { width: auto; flex: 0 1 40px; min-width: 12px; }
+    .profiles { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  }
 </style>
 </head>
 <body>
@@ -165,7 +197,7 @@
         <input type="password" id="token" placeholder="ghp_… / github_pat_…" autocomplete="off">
       </div>
       <div id="err1" class="error hidden"></div>
-      <div class="row">
+      <div class="row actions">
         <span class="grow"></span>
         <button class="btn" id="connect">Verbinden</button>
       </div>
@@ -183,11 +215,11 @@
         <select id="repo"></select>
         <div class="row" style="margin-top:8px">
           <span class="meta">oder</span>
-          <input type="text" id="newrepo" placeholder="Name für neues privates Repo" style="width:260px;height:36px">
+          <input type="text" id="newrepo" placeholder="Name für neues privates Repo">
           <button class="btn text" id="createrepo">Anlegen</button>
         </div>
       </div>
-      <div class="row" style="align-items:flex-start">
+      <div class="cols">
         <div class="grow">
           <div class="label" style="margin-bottom:6px">Main-Branch (Quelle der Wahrheit)</div>
           <select id="mainbranch"></select>
@@ -204,7 +236,7 @@
         <span>Änderungen auf dem Main-Branch werden automatisch übernommen. Lokale Änderungen sammeln sich als Commits in <strong>einem offenen Pull Request</strong> auf dem Sync-Branch. Nur wenn du diesen PR mergst — hier oder auf GitHub — verändert sich der Main-Branch.</span>
       </div>
       <div id="err2" class="error hidden"></div>
-      <div class="row">
+      <div class="row actions">
         <button class="btn text" id="back2">Zurück</button>
         <span class="grow"></span>
         <button class="btn" id="next2">Weiter</button>
@@ -224,7 +256,7 @@
       </div>
       <div class="hint">Immer ausgeschlossen und nicht abwählbar — unabhängig vom Profil: <span class="mono">secrets.yaml · .storage/ (Rohdaten) · *.db · Logs &amp; Caches</span></div>
       <div id="err3" class="error hidden"></div>
-      <div class="row">
+      <div class="row actions">
         <button class="btn text" id="back3">Zurück</button>
         <span class="grow"></span>
         <button class="btn" id="finish">Einrichtung abschließen</button>
@@ -239,7 +271,7 @@
         <h3>Konfiguration koppeln</h3>
         <div class="meta" id="couplemsg"></div>
         <div id="coupleerr" class="error hidden"></div>
-        <div class="row">
+        <div class="row actions">
           <span class="grow"></span>
           <button class="btn text hidden" id="coupleforce">Remote umstellen &amp; koppeln</button>
           <button class="btn" id="couplebtn">Jetzt koppeln</button>
@@ -256,7 +288,7 @@
           </div>
           <div class="meta" id="restartmeta"></div>
           <div id="checkerror" class="error mono hidden" style="white-space:pre-wrap"></div>
-          <div class="row">
+          <div class="row actions">
             <span class="grow"></span>
             <button class="btn text" id="recheckbtn">Prüfung wiederholen</button>
             <button class="btn" id="restartbtn">Home Assistant neu starten</button>
@@ -303,7 +335,7 @@
             <div id="commitbox" class="hidden">
               <div class="label" style="margin-bottom:6px">Commit-Nachricht</div>
               <input type="text" id="commitmsg">
-              <div class="row" style="margin-top:10px">
+              <div class="row actions" style="margin-top:10px">
                 <span class="meta" id="autocommitinfo"></span>
                 <span class="grow"></span>
                 <button class="btn" id="commitbtn">Jetzt committen</button>
@@ -323,13 +355,13 @@
             <div id="prmissing" class="hidden" style="display:flex;flex-direction:column;gap:10px">
               <div class="meta">Es liegen Commits auf dem Sync-Branch bereit, aber der Sammel-PR fehlt noch (die Erstellung wird automatisch nachgeholt — oder direkt hier):</div>
               <div id="prmissingerr" class="error hidden"></div>
-              <div class="row"><span class="grow"></span><button class="btn" id="createprbtn">PR jetzt anlegen</button></div>
+              <div class="row actions"><span class="grow"></span><button class="btn" id="createprbtn">PR jetzt anlegen</button></div>
             </div>
             <div id="prbox" class="hidden" style="display:flex;flex-direction:column;gap:12px">
               <div style="font-size:15px;font-weight:500" id="prtitle"></div>
               <div id="prcommits" style="display:flex;flex-direction:column;gap:8px"></div>
               <div class="hint">Mergen ist immer eine bewusste, manuelle Aktion — nie automatisch. Erst der Merge verändert main.</div>
-              <div class="row">
+              <div class="row actions">
                 <button class="btn" id="mergebtn">PR mergen …</button>
                 <a id="prlink" href="#" target="_blank" rel="noopener"><button class="btn text">Auf GitHub ansehen</button></a>
               </div>
@@ -343,7 +375,7 @@
               <span id="incount" class="chip hidden"></span>
             </div>
             <div id="incoming" class="empty">Auf Stand mit main.</div>
-            <div class="row hidden" id="pullrow">
+            <div class="row actions hidden" id="pullrow">
               <span class="grow"></span>
               <button class="btn" id="pullbtn">Jetzt übernehmen</button>
             </div>
@@ -353,14 +385,14 @@
             <h3>Einrichtung</h3>
             <div class="meta" id="sumrepo"></div>
             <div class="meta" id="sumprofile"></div>
-            <div class="row">
+            <div class="row actions">
               <button class="btn text" id="editgitignore">.gitignore bearbeiten</button>
               <span class="grow"></span>
               <button class="btn text danger" id="disconnect">Verbindung trennen</button>
             </div>
             <div id="dash-gitignore" class="hidden">
               <textarea id="dash-gitignore-text" rows="10" spellcheck="false"></textarea>
-              <div class="row" style="margin-top:8px">
+              <div class="row actions" style="margin-top:8px">
                 <span class="grow"></span>
                 <button class="btn text" id="dash-gitignore-cancel">Abbrechen</button>
                 <button class="btn" id="dash-gitignore-save">Speichern</button>
@@ -422,7 +454,7 @@
               <input type="text" id="set-template" class="mono">
               <div class="meta" style="margin-top:4px">Platzhalter: <span class="mono">{dateien}</span> · <span class="mono">{anzahl}</span></div>
             </div>
-            <div class="row">
+            <div class="row actions">
               <span class="grow"></span>
               <button class="btn text" id="set-template-save">Speichern</button>
             </div>
@@ -464,7 +496,7 @@
           <div class="card">
             <h3>Profil</h3>
             <div class="meta" id="set-profile"></div>
-            <div class="row">
+            <div class="row actions">
               <span class="grow"></span>
               <button class="btn text" id="set-changeprofile">Profil ändern</button>
             </div>
@@ -474,7 +506,7 @@
             <div class="meta" id="set-repo"></div>
             <div class="meta">Sync-Branch: <span class="mono" id="set-syncbranch"></span> — änderbar durch Neueinrichtung</div>
             <div class="divider"></div>
-            <div class="row">
+            <div class="row actions">
               <span class="grow"></span>
               <button class="btn text danger" id="set-disconnect">Verbindung trennen</button>
             </div>

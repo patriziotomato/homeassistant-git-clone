@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.0
+
+- The panel is now mobile friendly: on phones and narrow windows the
+  dashboard and settings stack into a single column, the setup wizard
+  (stepper, repository form, profile picker) fits small screens, and long
+  file paths or branch names no longer overflow the layout.
+- Buttons and toggles are easier to hit on touch screens, and focusing an
+  input field on iOS no longer zooms the whole page.
+
 ## 0.5.1
 
 - Fix: when creating the collecting pull request failed once (network
