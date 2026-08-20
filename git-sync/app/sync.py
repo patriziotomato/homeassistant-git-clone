@@ -11,6 +11,7 @@ import time
 import gh
 import git_ops
 import ha
+import i18n
 import store
 
 LOG = logging.getLogger("git-sync")
@@ -20,7 +21,10 @@ DEFAULT_SETTINGS = {
     "auto_commit": True,
     "auto_commit_delay": 120,  # seconds of quiet before auto-committing
     "poll_interval": 60,
-    "commit_template": "Sync: {dateien}",
+    # Empty values follow the UI language: "" means "not picked yet" for the
+    # language, and "use this language's default" for the commit template.
+    "language": "",
+    "commit_template": "",
     "notify_conflict": True,
     "notify_pr_waiting": True,
     "pr_waiting_hours": 24,
@@ -31,15 +35,16 @@ NOTIFY_CONFLICT_ID = "git_sync_conflict"
 NOTIFY_PR_ID = "git_sync_pr_waiting"
 NOTIFY_RESTART_ID = "git_sync_restart"
 
-PR_TITLE = "Sync: Lokale Änderungen aus Home Assistant"
-PR_BODY = (
-    "Dieser Pull Request wird von der Git-Sync-App gepflegt. Lokale Änderungen "
-    "aus Home Assistant sammeln sich hier als Commits.\n\n"
-    "Mergen — hier oder aus der App — übernimmt sie in den Main-Branch; die "
-    "App setzt den Sync-Branch danach automatisch neu auf."
-)
-
 _first_dirty_at: float | None = None
+
+
+def effective_settings(stored: dict | None = None) -> dict:
+    """Defaults + stored values, with the language-dependent bits filled in."""
+    settings = {**DEFAULT_SETTINGS, **(stored or {})}
+    settings["language"] = i18n.resolve(settings.get("language"))
+    if not settings.get("commit_template"):
+        settings["commit_template"] = i18n.t(settings["language"], "commit.template")
+    return settings
 
 
 def _ctx():
@@ -49,7 +54,7 @@ def _ctx():
         github.get("token"),
         state.get("repo"),
         state.get("profile"),
-        {**DEFAULT_SETTINGS, **state.get("sync_settings", {})},
+        effective_settings(state.get("sync_settings")),
     )
 
 
@@ -67,7 +72,7 @@ def couple(force_remote: bool = False) -> dict:
     return {"coupling": state}
 
 
-def ensure_pr(token: str, repo: dict) -> dict | None:
+def ensure_pr(token: str, repo: dict, language: str | None = None) -> dict | None:
     """The one collecting PR — reuse the open one or create it on demand."""
     if not git_ops.outgoing_commits(repo, limit=1):
         return None  # nothing on the sync branch beyond main -> no PR needed
@@ -76,7 +81,7 @@ def ensure_pr(token: str, repo: dict) -> dict | None:
         return pr
     return gh.create_pr(
         token, repo["full_name"], repo["sync_branch"], repo["main_branch"],
-        PR_TITLE, PR_BODY,
+        i18n.t(language, "pr.title"), i18n.t(language, "pr.body"),
     )
 
 
@@ -92,27 +97,33 @@ def commit_now(message: str | None) -> dict:
     # The commit is safely pushed at this point — a failing PR creation must
     # not fail the whole call. The poller and the dashboard retry it.
     try:
-        pr = ensure_pr(token, repo)
+        pr = ensure_pr(token, repo, settings["language"])
     except gh.GitHubError as err:
-        LOG.warning("Sync-PR konnte nicht angelegt werden (%s): %s", err.kind, err.detail or "-")
+        LOG.warning("Sync PR could not be created (%s): %s", err.kind, err.detail or "-")
         return {"committed": sha, "pr": None, "pr_error": err.kind}
     return {"committed": sha, "pr": pr}
 
 
 def ensure_pr_now() -> dict:
     """Create the collecting PR on demand (dashboard action / self-heal)."""
-    token, repo, _, _ = _ctx()
-    return {"pr": ensure_pr(token, repo)}
+    token, repo, _, settings = _ctx()
+    return {"pr": ensure_pr(token, repo, settings["language"])}
 
 
 def auto_message(changes: list[dict], settings: dict | None = None) -> str:
+    settings = settings or effective_settings()
+    language = settings.get("language")
     paths = [c["path"] for c in changes]
     if not paths:
-        return "Sync: Änderungen aus Home Assistant"
+        return i18n.t(language, "commit.fallback")
     head = ", ".join(paths[:2])
-    more = f" (+{len(paths) - 2} weitere)" if len(paths) > 2 else ""
-    template = (settings or {}).get("commit_template") or DEFAULT_SETTINGS["commit_template"]
-    return template.replace("{dateien}", head + more).replace("{anzahl}", str(len(paths)))
+    more = i18n.t(language, "commit.more", count=len(paths) - 2) if len(paths) > 2 else ""
+    template = settings.get("commit_template") or i18n.t(language, "commit.template")
+    # Both spellings stay live so a template survives a language switch.
+    files, count = head + more, str(len(paths))
+    return (template
+            .replace("{dateien}", files).replace("{files}", files)
+            .replace("{anzahl}", count).replace("{count}", count))
 
 
 def _notify_conflict(active: bool, settings: dict) -> None:
@@ -124,12 +135,11 @@ def _notify_conflict(active: bool, settings: dict) -> None:
     state["conflict"] = active
     store.update(notify_state=state)
     if active and settings.get("notify_conflict"):
+        language = settings.get("language")
         ha.notify(
             NOTIFY_CONFLICT_ID,
-            "Git Sync: Konflikt",
-            "Deine Änderungen und der Main-Branch widersprechen sich. "
-            "Bitte löse den Konflikt im Pull Request auf GitHub — "
-            "danach geht es automatisch weiter.",
+            i18n.t(language, "notify.conflict.title"),
+            i18n.t(language, "notify.conflict.body"),
         )
     elif not active:
         ha.dismiss(NOTIFY_CONFLICT_ID)
@@ -157,12 +167,12 @@ def _check_pr_reminder(token: str, repo: dict, settings: dict) -> None:
     if age_hours >= settings.get("pr_waiting_hours", 24):
         state["pr_reminded"] = pr["number"]
         store.update(notify_state=state)
+        language = settings.get("language")
         ha.notify(
             NOTIFY_PR_ID,
-            "Git Sync: Sync-PR wartet auf Merge",
-            f"Pull Request #{pr['number']} sammelt seit über "
-            f"{settings.get('pr_waiting_hours', 24)} Stunden Änderungen. "
-            "Merge ihn im Git-Sync-Panel oder auf GitHub, um main zu aktualisieren.",
+            i18n.t(language, "notify.pr_waiting.title"),
+            i18n.t(language, "notify.pr_waiting.body",
+                   number=pr["number"], hours=settings.get("pr_waiting_hours", 24)),
         )
 
 
@@ -178,21 +188,19 @@ def _after_apply(settings: dict) -> None:
     })
     if not settings.get("notify_restart"):
         return
+    language = settings.get("language")
     if ok:
         ha.notify(
             NOTIFY_RESTART_ID,
-            "Git Sync: Neustart empfohlen",
-            "Änderungen aus main wurden übernommen und die Konfigurations"
-            "prüfung war erfolgreich. Starte Home Assistant über das "
-            "Git-Sync-Panel neu, um sie zu aktivieren.",
+            i18n.t(language, "notify.restart.title"),
+            i18n.t(language, "notify.restart.body"),
         )
     elif ok is False:
         ha.notify(
             NOTIFY_RESTART_ID,
-            "Git Sync: Konfigurationsprüfung fehlgeschlagen",
-            "Änderungen aus main wurden übernommen, aber `ha core check` "
-            f"meldet einen Fehler: {message or 'siehe Panel'}. "
-            "Bitte vor einem Neustart korrigieren.",
+            i18n.t(language, "notify.check_failed.title"),
+            i18n.t(language, "notify.check_failed.body",
+                   message=message or i18n.t(language, "notify.check_failed.see_panel")),
         )
 
 
@@ -282,7 +290,7 @@ def full_status() -> dict:
     changes = git_ops.local_changes()
     result.update(
         changes=changes,
-        suggested_message=auto_message(changes) if changes else None,
+        suggested_message=auto_message(changes, settings) if changes else None,
         last_commit=git_ops.last_commit(),
         incoming=git_ops.incoming_commits(repo),
         incoming_count=git_ops.incoming_count(repo),
@@ -346,9 +354,9 @@ async def poller():
                     reminded = store.load().get("notify_state", {}).get("pr_reminded") is not None
                     if has_outgoing:
                         try:
-                            await asyncio.to_thread(ensure_pr, token, repo)
+                            await asyncio.to_thread(ensure_pr, token, repo, settings["language"])
                         except gh.GitHubError as err:
-                            LOG.warning("Sammel-PR fehlt und konnte nicht angelegt werden (%s): %s",
+                            LOG.warning("Collecting PR is missing and could not be created (%s): %s",
                                         err.kind, err.detail or "-")
                     if has_outgoing or reminded:
                         await asyncio.to_thread(_check_pr_reminder, token, repo, settings)

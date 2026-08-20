@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.6.0
+
+- The panel now speaks English as well as German. On first start it follows
+  your browser language; a DE/EN switch in the header changes it at any
+  time, and the choice is remembered for the instance.
+- The language applies beyond the panel: Home Assistant notifications, the
+  collecting pull request and the automatic commit messages are written in
+  it too.
+- The template for automatic commit messages follows the language as long
+  as it is untouched ({dateien}/{anzahl} in German, {files}/{count} in
+  English). Both spellings keep working, so a template you wrote yourself
+  survives a language switch.
+
 ## 0.5.1
 
 - Fix: when creating the collecting pull request failed once (network
