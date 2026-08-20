@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.2
+
+- Fix: button labels no longer overflow the card frame — when a card is too
+  narrow for a row of buttons (e.g. ".gitignore bearbeiten" and "Verbindung
+  trennen" in the setup card), the buttons now wrap onto their own line
+  instead of running out of the card.
+
 ## 0.7.1
 
 - The settings button in the header now shows a proper gear icon — the
