@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.2
+
+- The dashboard card "Offener Sync-PR" is now called "Änderungen aus HA",
+  making it clearer that it collects the changes made in Home Assistant.
+
 ## 0.5.1
 
 - Fix: when creating the collecting pull request failed once (network
