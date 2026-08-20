@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.1
+
+- The settings button in the header now shows a proper gear icon — the
+  previous symbol looked more like a sun or brightness control.
+
 ## 0.7.0
 
 - The panel now speaks English as well as German. On first start it follows
