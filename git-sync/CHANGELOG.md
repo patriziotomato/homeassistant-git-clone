@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0
+
+- The built-in safety exclusions are now re-established every time the app
+  starts and before every commit. Until now they were written once, when the
+  configuration directory was coupled — if they were later lost (a restored
+  backup that predates the coupling, a git command run by hand in the
+  configuration directory), the automatic commits kept running without any
+  exclusions at all and pushed `secrets.yaml`, `.storage/` and the recorder
+  database to your repository, while the panel showed a perfectly healthy
+  state throughout. That can no longer happen.
+
 ## 0.9.0
 
 - The "Incoming from main" card now also shows what has already arrived: a
