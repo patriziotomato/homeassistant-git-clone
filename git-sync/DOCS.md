@@ -31,6 +31,14 @@ header changes it at any time. The choice belongs to the instance, not to
 the browser: Home Assistant notifications, the collecting pull request and
 the automatic commit messages are written in the same language.
 
+## Light and dark
+
+The panel follows the light or dark setting of your **browser or operating
+system**, not the Home Assistant theme. Ingress renders the panel in a frame
+on its own origin, so Home Assistant's theme variables never reach it. On
+almost every setup the two agree — but a dark Home Assistant theme on a
+device running in light mode will still show a light panel.
+
 ## Current state
 
 This is an early preview (milestone 4): setup wizard, the working sync
