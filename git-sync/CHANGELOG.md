@@ -76,6 +76,12 @@
   error.
 - Fix: a failed restart used to show the raw code "restart_failed" instead
   of a sentence.
+- Coupling no longer quietly proposes deleting your repository. Adopting
+  main as the baseline turns every file that is on main but not in your
+  configuration into a deletion in the very first pull request — including
+  the README of a repository the wizard had just created one screen earlier.
+  Git Sync now stops before coupling, lists what would be removed and asks
+  you to confirm. As before, nothing changes on main until you merge.
 
 ## 0.9.0
 

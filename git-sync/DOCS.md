@@ -20,6 +20,18 @@ Couples your Home Assistant configuration to a GitHub repository.
   you straight there.
 - `secrets.yaml`, `.storage/`, databases and logs are **never** transferred.
 
+## The first pull request
+
+Coupling adopts your main branch as the baseline, so the first pull request
+reconciles the repository with your instance **in both directions**: files
+your configuration has and main does not are added, and anything already on
+main that your configuration does not have appears as a **deletion**.
+
+Git Sync stops before coupling if that would be the case, lists the affected
+files and asks you to confirm. Nothing changes on main until you merge that
+pull request either way. A repository created from the wizard starts with a
+`README.md`, so this is the one file you will normally see there.
+
 ## Applying changes
 
 After changes from main have been applied, the panel offers **Reload**

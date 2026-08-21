@@ -111,9 +111,10 @@ def configured() -> bool:
     return bool(token and repo and profile)
 
 
-def couple(force_remote: bool = False) -> dict:
+def couple(force_remote: bool = False, confirm_deletions: bool = False) -> dict:
     token, repo, profile, _ = _ctx()
-    state = git_ops.couple(token, repo, force_remote=force_remote)
+    state = git_ops.couple(token, repo, force_remote=force_remote,
+                           confirm_deletions=confirm_deletions)
     git_ops.apply_excludes(profile)
     git_ops.write_lockfile(profile)
     store.update(coupled_at=int(time.time()))

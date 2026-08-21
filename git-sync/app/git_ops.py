@@ -66,10 +66,13 @@ COMMIT_IDENT = ["-c", "user.name=Git Sync", "-c", "user.email=git-sync@addon.loc
 
 
 class GitError(Exception):
-    def __init__(self, kind: str, detail: str = ""):
+    def __init__(self, kind: str, detail: str = "", paths: list[str] | None = None):
         super().__init__(detail or kind)
         self.kind = kind
         self.detail = detail
+        # Only "would_delete" carries these: the paths the first sync PR would
+        # propose removing, so the panel can show them instead of a bare code.
+        self.paths = paths or []
 
 
 def _auth_args(token: str | None) -> list[str]:
@@ -143,8 +146,28 @@ def coupling_state(repo_cfg: dict) -> str:
     return "coupled"
 
 
-def couple(token: str, repo_cfg: dict, force_remote: bool = False) -> str:
-    """Bring CONFIG_DIR into the working model; returns the final state."""
+def absent_locally(ref: str) -> list[str]:
+    """Paths tracked at `ref` that do not exist in the configuration directory.
+
+    After couple()'s mixed reset these show up as deletions in the work tree,
+    and commit_and_push()'s `add -A` would carry them into the first sync PR —
+    so this is exactly the list of files that PR would propose removing from
+    main. NUL-separated, or git quotes paths with unusual characters.
+    """
+    code, out, _ = _git("ls-tree", "-r", "-z", "--name-only", ref, strip=False)
+    if code != 0:
+        return []
+    root = Path(CONFIG_DIR)
+    return sorted(path for path in out.split("\0") if path and not (root / path).exists())
+
+
+def couple(token: str, repo_cfg: dict, force_remote: bool = False,
+           confirm_deletions: bool = False) -> str:
+    """Bring CONFIG_DIR into the working model; returns the final state.
+
+    Raises GitError("would_delete") when adopting main as the baseline would
+    put deletions into the first sync PR, unless the caller confirms them.
+    """
     # clone_url is a test seam (local bare repo); production always github.
     https_url = repo_cfg.get("clone_url") or f"https://github.com/{repo_cfg['full_name']}"
     main = repo_cfg["main_branch"]
@@ -177,7 +200,15 @@ def couple(token: str, repo_cfg: dict, force_remote: bool = False) -> str:
 
         if not has_commits():
             # Fresh repository around an existing config: adopt remote main as
-            # the baseline; local differences stay as uncommitted changes.
+            # the baseline. Local differences stay as uncommitted changes —
+            # but that cuts both ways: a file on main that /config does not
+            # have becomes a *deletion* after the mixed reset, and `add -A`
+            # would put it into the very first pull request. Nobody asked for
+            # that, so it needs confirming.
+            deletions = absent_locally("FETCH_HEAD")
+            if deletions and not confirm_deletions:
+                raise GitError("would_delete", f"{len(deletions)} path(s) on {main}",
+                               paths=deletions)
             _must("update-ref", f"refs/heads/{main}", "FETCH_HEAD")
             _must("symbolic-ref", "HEAD", f"refs/heads/{main}")
             _must("reset", "--mixed", main)

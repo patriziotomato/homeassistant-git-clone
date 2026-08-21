@@ -64,8 +64,19 @@ cc = CONFIG / "custom_components" / "demo_app"
 cc.mkdir(parents=True)
 (cc / "manifest.json").write_text(json.dumps({"domain": "demo_app", "version": "1.2.3"}))
 
+# 0) main carries README.md, which /config does not have. Adopting main as the
+#    baseline would turn that into a deletion in the very first sync PR, so
+#    coupling has to refuse until the user confirms it.
+try:
+    git_ops.couple(None, REPO)
+    check("couple refuses to propose deletions", False, "no GitError raised")
+except git_ops.GitError as err:
+    check("couple refuses to propose deletions", err.kind == "would_delete", err.kind)
+    check("the affected paths are reported", err.paths == ["README.md"], str(err.paths))
+check("nothing was committed while refusing", not git_ops.has_commits())
+
 # 1) Coupling adopts main as baseline, keeps local diffs
-state = git_ops.couple(None, REPO)
+state = git_ops.couple(None, REPO, confirm_deletions=True)
 check("couple -> coupled", state == "coupled", state)
 check("on sync branch", git_ops.current_branch() == "ha-sync", str(git_ops.current_branch()))
 git_ops.apply_excludes(PROFILE_OA)
@@ -284,6 +295,34 @@ restored = exclude_file.read_text()
 check("safety entry is back", "secrets.yaml" in restored, restored)
 check("lines outside the markers survive", "notizen.md" in restored, restored)
 check("managed block still exactly once", restored.count(git_ops.MARK_BEGIN) == 1, restored)
+
+# 10) A second configuration directory whose content is a superset of main:
+#     nothing on main is missing locally, so coupling must not stop to ask.
+BARE2 = TMP / "github2.git"
+CONFIG2 = TMP / "config2"
+WORK2 = TMP / "work2"
+sh("git", "init", "--bare", "-b", "main", str(BARE2))
+sh("git", "clone", str(BARE2), str(WORK2))
+(WORK2 / "configuration.yaml").write_text("default_config:\n")
+sh("git", "-C", str(WORK2), "-c", "user.name=R", "-c", "user.email=r@x", "add", "-A")
+sh("git", "-C", str(WORK2), "-c", "user.name=R", "-c", "user.email=r@x", "commit", "-m", "init")
+sh("git", "-C", str(WORK2), "push", "origin", "main")
+CONFIG2.mkdir()
+(CONFIG2 / "configuration.yaml").write_text("default_config:\nlogger:\n")
+(CONFIG2 / "automations.yaml").write_text("[]\n")
+
+git_ops.CONFIG_DIR = str(CONFIG2)
+REPO2 = {**REPO, "clone_url": str(BARE2)}
+try:
+    state = git_ops.couple(None, REPO2)
+    check("no deletions -> couples without asking", state == "coupled", state)
+except git_ops.GitError as err:
+    check("no deletions -> couples without asking", False, f"{err.kind}: {err.detail}")
+check("a local-only file is not a deletion",
+      git_ops.absent_locally("origin/main") == [], str(git_ops.absent_locally("origin/main")))
+check("coupling again is not blocked either",
+      git_ops.couple(None, REPO2) == "coupled")
+git_ops.CONFIG_DIR = str(CONFIG)
 
 print()
 print("FAILED: " + (", ".join(FAILED) if FAILED else "none"))

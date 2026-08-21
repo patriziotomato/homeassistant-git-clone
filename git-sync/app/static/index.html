@@ -389,10 +389,19 @@
       <div id="couplecard" class="card hidden">
         <h3 data-i18n="couple.heading"></h3>
         <div class="meta" id="couplemsg"></div>
+        <div id="coupledelete" class="conflict hidden">
+          <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+            <strong data-i18n="couple.delete.title"></strong>
+            <span id="coupledeletebody"></span>
+            <div id="coupledeletelist" class="mono" style="font-size:12px;line-height:1.7;overflow-wrap:anywhere"></div>
+            <span class="meta" data-i18n="couple.delete.hint"></span>
+          </div>
+        </div>
         <div id="coupleerr" class="error hidden"></div>
         <div class="row actions">
           <span class="grow"></span>
           <button class="btn text hidden" id="coupleforce" data-i18n="couple.force"></button>
+          <button class="btn text hidden" id="coupleconfirm" data-i18n="couple.delete.confirm"></button>
           <button class="btn" id="couplebtn" data-i18n="couple.now"></button>
         </div>
       </div>
@@ -730,6 +739,11 @@
       'couple.remote_mismatch': 'Das Konfigurationsverzeichnis zeigt auf ein anderes Remote{remote}. Zum Koppeln muss es auf dein gewähltes Repo umgestellt werden.',
       'couple.wrong_branch': 'Die Konfiguration ist noch nicht auf dem Sync-Branch. Beim Koppeln wechselt Git Sync auf {branch} — am Arbeitsstand ändert sich nichts.',
       'couple.config_missing': 'Konfigurationsverzeichnis nicht gefunden.',
+      'couple.delete.title': 'Der erste Sync-PR würde Dateien auf main löschen',
+      'couple.delete.body': 'Auf {branch} liegen {count} Datei(en), die es in deiner Home-Assistant-Konfiguration nicht gibt. Beim Koppeln wird main zur Ausgangsbasis — diese Dateien erscheinen dann im ersten Pull Request als Löschungen:',
+      'couple.delete.more': '… und {count} weitere',
+      'couple.delete.hint': 'Nichts davon verändert main, bevor du den Pull Request mergest. Wenn du die Dateien behalten willst, brich hier ab und nimm ein leeres Repository — oder kopiere die Dateien vorher in deine Konfiguration.',
+      'couple.delete.confirm': 'Trotzdem koppeln',
       'restart.title': 'Änderungen übernommen — Neustart ausstehend',
       'restart.recheck': 'Prüfung wiederholen',
       'restart.dismiss': 'Bereits neu gestartet',
@@ -909,6 +923,11 @@
       'couple.remote_mismatch': 'The configuration directory points at a different remote{remote}. To couple it, it has to be switched to your chosen repo.',
       'couple.wrong_branch': 'The configuration is not on the sync branch yet. Coupling switches Git Sync to {branch} — your working state stays as it is.',
       'couple.config_missing': 'Configuration directory not found.',
+      'couple.delete.title': 'The first sync PR would delete files on main',
+      'couple.delete.body': '{branch} holds {count} file(s) that your Home Assistant configuration does not have. Coupling adopts main as the baseline, so those files appear in the first pull request as deletions:',
+      'couple.delete.more': '… and {count} more',
+      'couple.delete.hint': 'None of this changes main until you merge that pull request. If you want to keep the files, stop here and use an empty repository — or copy them into your configuration first.',
+      'couple.delete.confirm': 'Couple anyway',
       'restart.title': 'Changes applied — restart pending',
       'restart.recheck': 'Check again',
       'restart.dismiss': 'Already restarted',
@@ -1427,10 +1446,45 @@
     el('coupleforce').classList.toggle('hidden', s.coupling !== 'remote_mismatch');
     el('couplebtn').classList.toggle('hidden', s.coupling === 'remote_mismatch');
   }
-  function couple(force) {
+
+  // Coupling adopts main as the baseline, so anything on main that /config
+  // does not have becomes a deletion in the very first pull request. Show
+  // exactly what that would be and make the user say yes to it.
+  function showWouldDelete(info, force) {
+    var box = el('coupledelete');
+    var branch = (syncData && syncData.repo) ? syncData.repo.main_branch : 'main';
+    el('coupledeletebody').textContent = t('couple.delete.body',
+      { branch: branch, count: info.total });
+    var list = el('coupledeletelist');
+    list.innerHTML = '';
+    info.paths.forEach(function (path) {
+      var row = document.createElement('div');
+      row.textContent = '− ' + path;
+      list.appendChild(row);
+    });
+    if (info.total > info.paths.length) {
+      var more = document.createElement('div');
+      more.className = 'meta';
+      more.textContent = t('couple.delete.more', { count: info.total - info.paths.length });
+      list.appendChild(more);
+    }
+    box.classList.remove('hidden');
+    el('coupleconfirm').classList.remove('hidden');
+    // "Couple now" would only run into the same question again.
+    el('couplebtn').classList.add('hidden');
+    el('coupleconfirm').onclick = function () { couple(force, true); };
+  }
+
+  function couple(force, confirmDeletions) {
     el('coupleerr').classList.add('hidden');
-    api('POST', 'api/sync/couple', { force_remote: !!force })
-      .then(loadSync)
+    api('POST', 'api/sync/couple',
+        { force_remote: !!force, confirm_deletions: !!confirmDeletions })
+      .then(function (result) {
+        if (result && result.would_delete) return showWouldDelete(result.would_delete, force);
+        el('coupledelete').classList.add('hidden');
+        el('coupleconfirm').classList.add('hidden');
+        loadSync();
+      })
       .catch(function (err) { showError('coupleerr', err); });
   }
   el('couplebtn').addEventListener('click', function () { couple(false); });
