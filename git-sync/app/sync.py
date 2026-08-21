@@ -72,6 +72,25 @@ def couple(force_remote: bool = False) -> dict:
     return {"coupling": state}
 
 
+def reassert_excludes() -> bool:
+    """Re-write the managed safety block if it went missing (startup check).
+
+    `.git/info/exclude` is untracked by design, so git never restores it: a
+    backup predating the coupling, a hand-run git command or a partially
+    restored snapshot can leave the configuration directory without a single
+    exclusion. Nothing in the dashboard would show it — the next automatic
+    commit would simply push secrets.yaml and .storage/ to the repository.
+    """
+    _, repo, profile, _ = _ctx()
+    if not (repo and profile) or git_ops.coupling_state(repo) != "coupled":
+        return False
+    restored = git_ops.apply_excludes(profile)
+    if restored:
+        LOG.warning("Safety exclusions were missing or outdated in "
+                    ".git/info/exclude — restored on startup")
+    return restored
+
+
 def ensure_pr(token: str, repo: dict, language: str | None = None) -> dict | None:
     """The one collecting PR — reuse the open one or create it on demand."""
     if not git_ops.outgoing_commits(repo, limit=1):
@@ -88,6 +107,13 @@ def ensure_pr(token: str, repo: dict, language: str | None = None) -> dict | Non
 def commit_now(message: str | None) -> dict:
     global _first_dirty_at
     token, repo, profile, settings = _ctx()
+    # Before the working tree is read: without the managed block a lost
+    # .git/info/exclude would put secrets.yaml & friends into the change list
+    # and from there into the commit message. commit_and_push() re-asserts it
+    # again right before `add -A` — that is the guarantee, this is the tidy
+    # message. Both are no-ops while the block is intact.
+    if profile:
+        git_ops.apply_excludes(profile)
     changes = git_ops.local_changes()
     if not changes and not message:
         return {"committed": None}

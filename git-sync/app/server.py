@@ -33,6 +33,14 @@ LOG = logging.getLogger("git-sync")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    # First thing after a restart: make sure the safety exclusions are still
+    # in place. A restored backup can bring back a /config whose
+    # .git/info/exclude predates the coupling — the poller would start
+    # committing without them.
+    try:
+        sync.reassert_excludes()
+    except Exception:  # a broken exclude file must not keep the app down
+        LOG.exception("safety exclusions could not be re-asserted on startup")
     task = asyncio.create_task(sync.poller())
     yield
     task.cancel()

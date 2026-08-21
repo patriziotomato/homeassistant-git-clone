@@ -14,10 +14,13 @@ the repository's .git/config.
 
 import base64
 import json
+import logging
 import os
 import subprocess
 import threading
 from pathlib import Path
+
+LOG = logging.getLogger("git-sync")
 
 CONFIG_DIR = os.environ.get("CONFIG_DIR", "/homeassistant")
 
@@ -185,12 +188,17 @@ def couple(token: str, repo_cfg: dict, force_remote: bool = False) -> str:
         return coupling_state(repo_cfg)
 
 
-def apply_excludes(profile: dict) -> None:
+def apply_excludes(profile: dict) -> bool:
     """Write the managed block in .git/info/exclude (never the user's .gitignore).
 
     Profile "eigene_gitignore": the user's own .gitignore governs the sync
     scope — the managed block then carries only the non-negotiable safety
     exclusions.
+
+    Only the region between the markers is owned here; anything else in the
+    file is kept. The file is rewritten only when the block is missing or
+    outdated, so re-asserting it before every commit costs a read, not a
+    write. Returns True when the file was actually changed.
     """
     lines = [MARK_BEGIN]
     lines += ALWAYS_EXCLUDE
@@ -208,13 +216,18 @@ def apply_excludes(profile: dict) -> None:
     info = Path(CONFIG_DIR) / ".git" / "info"
     info.mkdir(parents=True, exist_ok=True)
     exclude = info / "exclude"
-    existing = exclude.read_text() if exclude.exists() else ""
+    original = exclude.read_text() if exclude.exists() else ""
+    existing = original
     if MARK_BEGIN in existing:
         head = existing.split(MARK_BEGIN)[0]
         tail = existing.split(MARK_END, 1)[1] if MARK_END in existing else ""
         existing = head + tail
     content = existing.rstrip("\n")
-    exclude.write_text((content + "\n\n" if content else "") + "\n".join(lines) + "\n")
+    desired = (content + "\n\n" if content else "") + "\n".join(lines) + "\n"
+    if desired == original:
+        return False
+    exclude.write_text(desired)
+    return True
 
 
 def write_lockfile(profile: dict) -> bool:
@@ -254,6 +267,14 @@ def local_changes() -> list[dict]:
 def commit_and_push(token: str, repo_cfg: dict, message: str, profile: dict) -> str | None:
     """Commit everything onto the sync branch and push. Returns commit sha."""
     with LOCK:
+        # .git/info/exclude is untracked by design, so nothing ever restores
+        # it: a backup predating the coupling, a hand-run git command or a
+        # partially restored snapshot can leave the tree without a single
+        # exclusion — and the `add -A` below would then push secrets.yaml and
+        # .storage/ to the repository. Re-assert the block right before it.
+        if apply_excludes(profile):
+            LOG.warning("Safety exclusions were missing or outdated in "
+                        ".git/info/exclude — restored before committing")
         write_lockfile(profile)
         if not local_changes():
             return None

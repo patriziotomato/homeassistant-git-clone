@@ -48,7 +48,10 @@ Custom) manage the sync scope through `.git/info/exclude` — your own
 the scope over to the repository's own `.gitignore`, editable right in the
 panel; it is the default when the chosen repository already has one.
 In every profile the safety exclusions (`secrets.yaml`, `.storage/`,
-databases, logs, caches) remain built-in and cannot be disabled.
+databases, logs, caches) remain built-in and cannot be disabled. The app
+re-writes its managed block on every start and before every commit, so a
+`.git/info/exclude` lost to a restored backup cannot quietly switch the
+exclusions off — and hand edits between the markers do not survive.
 
 ## GitHub token
 

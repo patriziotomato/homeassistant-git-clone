@@ -250,6 +250,41 @@ check("unstaged modification path intact",
       entries == [{"state": "M", "path": "automations.yaml"}], str(entries))
 git_ops.commit_and_push(None, REPO, "Sync: automations.yaml", PROFILE_OA)
 
+# 9) Regression: the managed safety block is re-asserted on every commit.
+#    `.git/info/exclude` is untracked, so nothing in git restores it — a
+#    restored backup or a hand-run git command can wipe it, and the next
+#    automatic `add -A` would push secrets.yaml and .storage/ to GitHub.
+exclude_file = CONFIG / ".git" / "info" / "exclude"
+exclude_file.unlink()
+(CONFIG / "sensors.yaml").write_text("[]\n")
+paths = [c["path"] for c in git_ops.local_changes()]
+check("lost exclude file exposes secrets", "secrets.yaml" in paths, str(paths))
+sha = git_ops.commit_and_push(None, REPO, "Sync: sensors.yaml", PROFILE_OA)
+check("commit succeeds after the exclude file was lost", sha is not None)
+check("safety block restored by the commit",
+      exclude_file.exists() and "secrets.yaml" in exclude_file.read_text())
+tracked = sh("git", "-C", str(CONFIG), "ls-files").splitlines()
+check("secrets.yaml still untracked", "secrets.yaml" not in tracked, str(tracked))
+check(".storage still untracked", not any(p.startswith(".storage/") for p in tracked), str(tracked))
+committed = sh("git", "-C", str(CONFIG), "show", "--name-only", "--format=", "HEAD").splitlines()
+check("secrets.yaml absent from the commit", "secrets.yaml" not in committed, str(committed))
+check("the real change was committed", "sensors.yaml" in committed, str(committed))
+check("secrets.yaml never reached the remote",
+      "secrets.yaml" not in sh("git", "-C", str(BARE), "ls-tree", "-r", "--name-only", "ha-sync"))
+
+# 9b) Re-asserting is a cheap no-op while the block is intact, rewrites the
+#     markers when someone edits inside them, and keeps the user's own lines.
+check("re-assert is a no-op when the block is intact",
+      git_ops.apply_excludes(PROFILE_OA) is False)
+exclude_file.write_text("# meine eigene Regel\nnotizen.md\n"
+                        + exclude_file.read_text().replace("secrets.yaml\n", ""))
+check("hand edit inside the markers is reverted",
+      git_ops.apply_excludes(PROFILE_OA) is True)
+restored = exclude_file.read_text()
+check("safety entry is back", "secrets.yaml" in restored, restored)
+check("lines outside the markers survive", "notizen.md" in restored, restored)
+check("managed block still exactly once", restored.count(git_ops.MARK_BEGIN) == 1, restored)
+
 print()
 print("FAILED: " + (", ".join(FAILED) if FAILED else "none"))
 sys.exit(1 if FAILED else 0)
