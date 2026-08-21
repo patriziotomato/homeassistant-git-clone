@@ -10,6 +10,11 @@
   exclusions at all and pushed `secrets.yaml`, `.storage/` and the recorder
   database to your repository, while the panel showed a perfectly healthy
   state throughout. That can no longer happen.
+- Fix: the database is now protected as completely as the panel promises.
+  Alongside the recorder database itself, everything SQLite writes next to it
+  (rollback journal, shared-memory and write-ahead files) and manual copies
+  such as `.db.bak` were previously able to slip into the repository. They are
+  now excluded in every profile.
 
 ## 0.9.0
 
