@@ -21,7 +21,7 @@ COUPLING_STATES = ["not_a_repo", "no_origin", "remote_mismatch", "wrong_branch",
 ERROR_CODES = ["invalid_token", "forbidden", "network", "branches_equal", "invalid_repo",
                "missing_name", "missing_token", "remote_mismatch", "not_configured",
                "not_connected", "git_failed", "config_missing", "cannot_create_repo",
-               "unknown"]
+               "reload_failed", "restart_failed", "unknown"]
 CHECK_RESULTS = ["ok", "error", "unavailable"]
 
 FAILED = []

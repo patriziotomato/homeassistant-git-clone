@@ -14,22 +14,23 @@ LOG = logging.getLogger("git-sync")
 SUPERVISOR = os.environ.get("SUPERVISOR_URL", "http://supervisor")
 
 
-def _call(service: str, payload: dict) -> bool:
+def _call(domain: str, service: str, payload: dict, timeout: int = 10) -> bool:
+    """Call a core service through the Supervisor's API proxy."""
     token = os.environ.get("SUPERVISOR_TOKEN")
     if not token:
-        LOG.info("SUPERVISOR_TOKEN missing — notification skipped (%s)", service)
+        LOG.info("SUPERVISOR_TOKEN missing — skipped (%s.%s)", domain, service)
         return False
     try:
         response = httpx.post(
-            f"{SUPERVISOR}/core/api/services/persistent_notification/{service}",
+            f"{SUPERVISOR}/core/api/services/{domain}/{service}",
             headers={"Authorization": f"Bearer {token}"},
             json=payload,
-            timeout=10,
+            timeout=timeout,
         )
         response.raise_for_status()
         return True
     except httpx.HTTPError as err:
-        LOG.warning("Notification failed (%s): %s", service, err)
+        LOG.warning("Service call failed (%s.%s): %s", domain, service, err)
         return False
 
 
@@ -80,8 +81,19 @@ def core_restart() -> bool:
         return False
 
 
+def core_reload() -> bool:
+    """Reload the YAML configuration that can be reloaded without a restart
+    (`homeassistant.reload_all`).
+
+    Deliberately not a replacement for a restart: the homeassistant: block,
+    integration setup, custom_components/ code and anything evaluated only at
+    startup are untouched by it.
+    """
+    return _call("homeassistant", "reload_all", {}, timeout=120)
+
+
 def notify(notification_id: str, title: str, message: str) -> bool:
-    return _call("create", {
+    return _call("persistent_notification", "create", {
         "notification_id": notification_id,
         "title": title,
         "message": message,
@@ -89,4 +101,5 @@ def notify(notification_id: str, title: str, message: str) -> bool:
 
 
 def dismiss(notification_id: str) -> bool:
-    return _call("dismiss", {"notification_id": notification_id})
+    return _call("persistent_notification", "dismiss",
+                 {"notification_id": notification_id})

@@ -266,6 +266,15 @@ def sync_restart() -> dict:
     return result
 
 
+@app.post("/api/sync/reload")
+def sync_reload() -> dict:
+    """Reload the reloadable YAML — never automatic, always user-confirmed."""
+    result = sync.reload_core()
+    if not result.get("ok"):
+        raise HTTPException(status_code=502, detail="reload_failed")
+    return result
+
+
 @app.post("/api/sync/restart-dismiss")
 def sync_restart_dismiss() -> dict:
     """The user restarted Home Assistant some other way — drop the banner."""

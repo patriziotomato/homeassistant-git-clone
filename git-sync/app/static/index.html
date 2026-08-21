@@ -407,11 +407,13 @@
           </div>
           <div class="meta" id="restartmeta"></div>
           <div id="checkerror" class="error mono hidden" style="white-space:pre-wrap"></div>
+          <div class="hint" id="reloadhint" data-i18n="restart.reload.hint"></div>
           <div class="row actions">
             <span class="grow"></span>
             <button class="btn text" id="dismissrestart" data-i18n="restart.dismiss"></button>
             <button class="btn text" id="recheckbtn" data-i18n="restart.recheck"></button>
-            <button class="btn" id="restartbtn" data-i18n="restart.button"></button>
+            <button class="btn text" id="restartbtn" data-i18n="restart.button"></button>
+            <button class="btn" id="reloadbtn" data-i18n="restart.reload"></button>
           </div>
         </div>
       </div>
@@ -731,6 +733,11 @@
       'restart.title': 'Änderungen übernommen — Neustart ausstehend',
       'restart.recheck': 'Prüfung wiederholen',
       'restart.dismiss': 'Bereits neu gestartet',
+      'restart.dismiss.done': 'Erledigt',
+      'restart.reload': 'Neu laden',
+      'restart.reload.hint': 'Neu laden übernimmt die YAML-Konfiguration, die ohne Neustart neu geladen werden kann — Automationen, Skripte, Szenen, Template-Entitäten. Änderungen am homeassistant:-Block, an Integrationen und an custom_components/ brauchen weiterhin einen Neustart.',
+      'restart.reloading': 'Wird neu geladen …',
+      'restart.reloaded': 'Neu geladen. Was Home Assistant nur beim Start auswertet — der homeassistant:-Block, Integrationen, custom_components/ — ist damit noch nicht aktiv; dafür braucht es einen Neustart.',
       'restart.button': 'Home Assistant neu starten',
       'restart.check.ok': 'Prüfung OK',
       'restart.check.error': 'Prüfung fehlgeschlagen',
@@ -825,6 +832,8 @@
       'error.invalid_token': 'Der Token wurde von GitHub nicht akzeptiert. Bitte prüfe Wert und Berechtigungen.',
       'error.forbidden': 'GitHub hat den Zugriff verweigert — fehlen dem Token Berechtigungen?',
       'error.cannot_create_repo': 'Dieser Token darf keine Repositories anlegen. Lege das Repository auf GitHub an und wähle es oben in der Liste aus — oder nimm einen klassischen Token mit repo-Scope.',
+      'error.reload_failed': 'Neu laden fehlgeschlagen — Details im App-Protokoll.',
+      'error.restart_failed': 'Der Neustart konnte nicht ausgelöst werden — Details im App-Protokoll.',
       'error.network': 'GitHub ist gerade nicht erreichbar. Bitte später erneut versuchen.',
       'error.branches_equal': 'Main- und Sync-Branch müssen unterschiedlich sein.',
       'error.invalid_repo': 'Bitte ein Repository auswählen.',
@@ -903,6 +912,11 @@
       'restart.title': 'Changes applied — restart pending',
       'restart.recheck': 'Check again',
       'restart.dismiss': 'Already restarted',
+      'restart.dismiss.done': 'Done',
+      'restart.reload': 'Reload',
+      'restart.reload.hint': 'Reload applies the YAML configuration that can be reloaded without a restart — automations, scripts, scenes, template entities. Changes to the homeassistant: block, to integrations and to custom_components/ still need a restart.',
+      'restart.reloading': 'Reloading …',
+      'restart.reloaded': 'Reloaded. Anything Home Assistant only evaluates at startup — the homeassistant: block, integrations, custom_components/ — is not active yet; that still needs a restart.',
       'restart.button': 'Restart Home Assistant',
       'restart.check.ok': 'Check OK',
       'restart.check.error': 'Check failed',
@@ -997,6 +1011,8 @@
       'error.invalid_token': 'GitHub did not accept the token. Please check its value and permissions.',
       'error.forbidden': 'GitHub denied access — is the token missing permissions?',
       'error.cannot_create_repo': 'This token cannot create repositories. Create the repository on GitHub and pick it from the list above — or use a classic token with the repo scope.',
+      'error.reload_failed': 'Reload failed — details are in the app log.',
+      'error.restart_failed': 'The restart could not be triggered — details are in the app log.',
       'error.network': 'GitHub is not reachable right now. Please try again later.',
       'error.branches_equal': 'Main and sync branch have to be different.',
       'error.invalid_repo': 'Please select a repository.',
@@ -1701,6 +1717,7 @@
     var chip = el('checkchip');
     var errbox = el('checkerror');
     var restart = el('restartbtn');
+    var reload = el('reloadbtn');
     errbox.classList.add('hidden');
     if (check.result === 'ok') {
       chip.className = 'chip ok';
@@ -1726,6 +1743,25 @@
         .then(loadSync)
         .catch(function (err) { showError('dasherr', err); })
         .finally(function () { el('dismissrestart').disabled = false; });
+    };
+    // A failing configuration check locks reloading for the same reason it
+    // locks the restart: applying a broken configuration to a running house.
+    reload.disabled = check.result === 'error';
+    // The reload does not clear restart_pending — it cannot know whether the
+    // change was one of the things only a restart applies. Say what it did.
+    var reloaded = !!core.reloaded_at;
+    el('reloadhint').classList.toggle('hidden', reloaded);
+    el('dismissrestart').textContent = reloaded ? t('restart.dismiss.done')
+                                                : t('restart.dismiss');
+    if (reloaded && check.result !== 'error') {
+      el('restartmeta').textContent = t('restart.reloaded');
+    }
+    reload.onclick = function () {
+      reload.disabled = true;
+      el('restartmeta').textContent = t('restart.reloading');
+      api('POST', 'api/sync/reload')
+        .then(loadSync)
+        .catch(function (err) { showError('dasherr', err); reload.disabled = false; });
     };
     el('recheckbtn').onclick = function () {
       el('recheckbtn').disabled = true;
