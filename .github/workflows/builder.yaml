@@ -23,8 +23,11 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v7
 
+      # Stays on @master: the release tags are not consumable as a Docker
+      # action — their Dockerfile has no default for ARG BUILD_FROM, so the
+      # action image fails to build. The base images are pinned in build.yaml.
       - name: Test build
-        uses: home-assistant/builder@7.2.0
+        uses: home-assistant/builder@master
         with:
           args: |
             --test \
