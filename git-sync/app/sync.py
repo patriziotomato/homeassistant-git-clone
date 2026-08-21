@@ -258,6 +258,19 @@ def restart_core() -> dict:
     return {"ok": True}
 
 
+def dismiss_restart() -> dict:
+    """Clear the pending-restart flag without restarting.
+
+    _after_apply() sets the flag whenever a pull changed files, and until now
+    restart_core() was the only thing clearing it — a restart from Developer
+    Tools, the Supervisor UI, `ha core restart` or a power cycle left the
+    banner standing for good, telling the user to do what they had just done.
+    """
+    store.update(core={"restart_pending": False, "check": None})
+    ha.dismiss(NOTIFY_RESTART_ID)
+    return {"ok": True}
+
+
 def pull_now() -> dict:
     """Fetch and integrate origin/sync + origin/main into the local branch."""
     token, repo, _, settings = _ctx()
