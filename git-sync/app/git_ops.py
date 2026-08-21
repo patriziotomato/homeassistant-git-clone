@@ -285,9 +285,8 @@ def incoming_count(repo_cfg: dict) -> int:
     return int(out) if code == 0 and out.isdigit() else 0
 
 
-def incoming_commits(repo_cfg: dict, limit: int = 5) -> list[dict]:
-    code, out, _ = _git("log", f"-{limit}", "--format=%h␟%s␟%cr",
-                        f"HEAD..origin/{repo_cfg['main_branch']}")
+def _commit_log(revs: str, limit: int) -> list[dict]:
+    code, out, _ = _git("log", f"-{limit}", "--format=%h␟%s␟%cr", revs)
     commits = []
     if code == 0 and out:
         for line in out.splitlines():
@@ -295,18 +294,27 @@ def incoming_commits(repo_cfg: dict, limit: int = 5) -> list[dict]:
             if len(parts) == 3:
                 commits.append({"hash": parts[0], "subject": parts[1], "when": parts[2]})
     return commits
+
+
+def incoming_commits(repo_cfg: dict, limit: int = 5) -> list[dict]:
+    return _commit_log(f"HEAD..origin/{repo_cfg['main_branch']}", limit)
+
+
+def applied_commits(repo_cfg: dict, limit: int = 5) -> list[dict]:
+    """The main commits the local config already carries — newest first.
+
+    The merge base is the newest main commit HEAD contains, so main's history
+    up to that point is exactly what has been taken over so far (by "Jetzt
+    übernehmen", by auto-pull, or by coupling in the first place).
+    """
+    code, base, _ = _git("merge-base", "HEAD", f"origin/{repo_cfg['main_branch']}")
+    if code != 0 or not base:
+        return []
+    return _commit_log(base, limit)
 
 
 def outgoing_commits(repo_cfg: dict, limit: int = 10) -> list[dict]:
-    code, out, _ = _git("log", f"-{limit}", "--format=%h␟%s␟%cr",
-                        f"origin/{repo_cfg['main_branch']}..HEAD")
-    commits = []
-    if code == 0 and out:
-        for line in out.splitlines():
-            parts = line.split("␟")
-            if len(parts) == 3:
-                commits.append({"hash": parts[0], "subject": parts[1], "when": parts[2]})
-    return commits
+    return _commit_log(f"origin/{repo_cfg['main_branch']}..HEAD", limit)
 
 
 def outgoing_files(repo_cfg: dict) -> list[str]:

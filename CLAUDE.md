@@ -52,6 +52,14 @@ main, Konflikte werden auf GitHub gelöst (nie in HA).
 
 - Feature-Branches + PR gegen `main`, Squash-Merge. Nie direkt auf `main`
   pushen (das ist auch das Prinzip der App selbst).
+- Die PR-Beschreibung hat genau zwei Inhalte, in dieser Reihenfolge: was
+  Nutzer merken, und wie es gebaut ist. Keine weiteren Abschnitte — auch
+  nicht für Tests, Changelog oder Screenshots. Alles so kompakt wie
+  möglich: ein paar Stichpunkte, keine Fließtext-Absätze.
+- Der Nutzer-Teil steht zweimal da, erst deutsch, dann englisch
+  (`## Änderungen aus User-Sicht`, danach `## Changes from the user's
+  perspective`) — inhaltlich dasselbe, nicht der englische Teil kürzer.
+  `## Umsetzungsdetails` folgt zuletzt und ist immer auf Englisch verfasst.
 - Vor jedem PR: `python3 tests/test_git_ops.py` (braucht nur git, kein
   Netzwerk) — testet die komplette Git-Engine gegen ein lokales Bare-Repo —
   und `python3 tests/test_i18n.py` (nur Standardbibliothek).

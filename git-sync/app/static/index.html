@@ -395,6 +395,11 @@
               <span class="grow"></span>
               <button class="btn" id="pullbtn" data-i18n="incoming.pull"></button>
             </div>
+            <div id="appliedbox" class="hidden" style="display:flex;flex-direction:column;gap:10px">
+              <div class="divider"></div>
+              <div class="label" data-i18n="incoming.applied.title"></div>
+              <div id="applied" style="display:flex;flex-direction:column;gap:8px"></div>
+            </div>
           </div>
           <!-- Verwaltung -->
           <div class="card">
@@ -657,6 +662,7 @@
       'incoming.empty.plain': 'Auf Stand mit main.',
       'incoming.count': '{count} Commit(s)',
       'incoming.pull': 'Jetzt übernehmen',
+      'incoming.applied.title': 'Zuletzt übernommen',
       'setup.title': 'Einrichtung',
       'setup.repo': 'Repository: {repo} · Main: {main} · Sync: {sync}',
       'setup.profile': 'Profil: {profile}',
@@ -826,6 +832,7 @@
       'incoming.empty.plain': 'Up to date with main.',
       'incoming.count': '{count} commit(s)',
       'incoming.pull': 'Apply now',
+      'incoming.applied.title': 'Recently applied',
       'setup.title': 'Setup',
       'setup.repo': 'Repository: {repo} · Main: {main} · Sync: {sync}',
       'setup.profile': 'Profile: {profile}',
@@ -1444,6 +1451,7 @@
     var list = el('incoming');
     chipEl.classList.toggle('hidden', count === 0);
     el('pullrow').classList.toggle('hidden', count === 0);
+    renderApplied(s);
     if (count === 0) {
       list.textContent = t('incoming.empty', { branch: s.repo.main_branch });
       list.classList.add('empty');
@@ -1463,6 +1471,17 @@
         .catch(function (err) { showError('dasherr', err); })
         .finally(function () { el('pullbtn').disabled = false; });
     };
+  }
+
+  // Die letzten von main übernommenen Commits / the last commits taken over from main
+  function renderApplied(s) {
+    var commits = s.applied || [];
+    var list = el('applied');
+    el('appliedbox').classList.toggle('hidden', commits.length === 0);
+    list.innerHTML = '';
+    commits.forEach(function (c) {
+      list.appendChild(commitRow(s, c));
+    });
   }
 
   // ---- Einstellungen

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0
+
+- The "Incoming from main" card now also shows what has already arrived: a
+  "Recently applied" list of the last five main commits your configuration
+  already carries, each linking to the commit on GitHub. So the card answers
+  both questions at once — what is still waiting, and what came in last.
+
 ## 0.8.0
 
 - Before merging the sync PR, the panel now asks for the text of the merge
