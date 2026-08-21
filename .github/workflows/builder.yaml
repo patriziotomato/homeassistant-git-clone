@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Test build (${{ matrix.arch }})
@@ -18,8 +21,11 @@ jobs:
           - amd64
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
+      # Stays on @master: the release tags are not consumable as a Docker
+      # action — their Dockerfile has no default for ARG BUILD_FROM, so the
+      # action image fails to build. The base images are pinned in build.yaml.
       - name: Test build
         uses: home-assistant/builder@master
         with:
