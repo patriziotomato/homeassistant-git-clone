@@ -5,10 +5,28 @@ Drives sync.observe_changes() with a fake clock — no git, no network, no
 event loop. Needs nothing but the standard library.
 """
 import sys
+import types
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "git-sync" / "app"))
+
+# sync.py imports gh.py and ha.py, which import httpx at module level — gh.py
+# even annotates a return type with httpx.Response, so the name has to resolve
+# at import time. Nothing under test here ever makes a request (the quiet-period
+# timer is pure), and both the CI workflow and the README promise these suites
+# need only git and the standard library. Use the real library when it happens
+# to be installed, and a stand-in when it is not, rather than adding a
+# dependency to a suite that has no use for one.
+try:
+    import httpx  # noqa: F401
+except ModuleNotFoundError:
+    _httpx = types.ModuleType("httpx")
+    _httpx.Response = type("Response", (), {})
+    _httpx.HTTPError = type("HTTPError", (Exception,), {})
+    _httpx.TimeoutException = type("TimeoutException", (_httpx.HTTPError,), {})
+    sys.modules["httpx"] = _httpx
+
 import sync  # noqa: E402
 
 DELAY = 120  # seconds, the shipped default
