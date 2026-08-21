@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Test build (${{ matrix.arch }})
@@ -18,10 +21,10 @@ jobs:
           - amd64
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Test build
-        uses: home-assistant/builder@master
+        uses: home-assistant/builder@7.2.0
         with:
           args: |
             --test \

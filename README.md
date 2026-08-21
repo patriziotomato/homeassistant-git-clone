@@ -1,5 +1,8 @@
 # Git Sync — Home Assistant App
 
+[![Tests](https://github.com/patriziotomato/homeassistant-git-clone/actions/workflows/tests.yaml/badge.svg)](https://github.com/patriziotomato/homeassistant-git-clone/actions/workflows/tests.yaml)
+[![Builder](https://github.com/patriziotomato/homeassistant-git-clone/actions/workflows/builder.yaml/badge.svg)](https://github.com/patriziotomato/homeassistant-git-clone/actions/workflows/builder.yaml)
+
 Couple your Home Assistant configuration to a GitHub repository with a
 pull-request-based workflow.
 
@@ -112,8 +115,11 @@ python3 tests/test_git_ops.py   # the whole git engine against a local bare repo
 python3 tests/test_i18n.py      # German/English dictionaries stay in sync
 ```
 
-CI runs a `home-assistant/builder` test build for all supported
-architectures on every push and pull request.
+Both suites run in CI on every push and pull request, next to a
+`home-assistant/builder` test build for all supported architectures. The green
+badge means exactly those two suites passed: the git engine and the
+translation dictionaries. The FastAPI endpoints, the panel and the GitHub
+client have no automated coverage — they are still checked by hand.
 
 ## License
 
