@@ -108,10 +108,19 @@ sh("git", "-C", str(WORK), "-c", "user.name=Remote", "-c", "user.email=r@x", "co
 sh("git", "-C", str(WORK), "push", "origin", "main")
 git_ops.fetch(None, REPO)
 check("incoming detected", git_ops.incoming_count(REPO) == 1, str(git_ops.incoming_count(REPO)))
+subjects = [c["subject"] for c in git_ops.applied_commits(REPO)]
+check("pending commit not listed as applied", "Skripte ergänzt" not in subjects, str(subjects))
+check("baseline listed as applied", "Erststand" in subjects, str(subjects))
 result = git_ops.integrate(None, REPO)
 check("integrate ok", result == "ok", result)
 check("main change arrived", (CONFIG / "scripts.yaml").exists())
 check("incoming now 0", git_ops.incoming_count(REPO) == 0)
+applied = git_ops.applied_commits(REPO)
+check("applied commit listed after integrate",
+      applied and applied[0]["subject"] == "Skripte ergänzt", str(applied))
+check("applied rows carry hash and age",
+      all(c["hash"] and c["when"] for c in applied), str(applied))
+check("applied history capped at five", len(git_ops.applied_commits(REPO)) <= 5, str(applied))
 
 # 4) Conflict: same file changed on main and locally
 (WORK / "automations.yaml").write_text("- id: remote_change\n")

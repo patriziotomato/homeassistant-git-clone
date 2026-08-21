@@ -304,6 +304,7 @@ def full_status() -> dict:
         last_commit=git_ops.last_commit(),
         incoming=git_ops.incoming_commits(repo),
         incoming_count=git_ops.incoming_count(repo),
+        applied=git_ops.applied_commits(repo),
         outgoing=git_ops.outgoing_commits(repo),
         core=state.get("core"),
         auto_commit_at=(
