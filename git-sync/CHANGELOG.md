@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.0
+
+- Fix: the database is now protected as completely as the panel promises.
+  Alongside the recorder database itself, everything SQLite writes next to it
+  (rollback journal, shared-memory and write-ahead files) and manual copies
+  such as `.db.bak` were previously able to slip into the repository. They are
+  now excluded in every profile.
+
 ## 0.9.0
 
 - The "Incoming from main" card now also shows what has already arrived: a

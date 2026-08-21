@@ -213,6 +213,34 @@ check("lingering remote branch reset to main",
 check("no outgoing after branch reset", git_ops.outgoing_commits(REPO) == [],
       str(git_ops.outgoing_commits(REPO)))
 
+# 7c) Regression: the database safety block covers everything SQLite writes
+#     next to the recorder database, plus manual copies of it. None of these
+#     may reach the repository — not via local_changes(), not via git add -A.
+db_files = ["home-assistant_v2.db", "home-assistant_v2.db-journal",
+            "home-assistant_v2.db-shm", "home-assistant_v2.db-wal",
+            "home-assistant_v2.db.bak", "home-assistant_v2.db.1"]
+for name in db_files:
+    (CONFIG / name).write_text("sqlite payload")
+(CONFIG / "input_boolean.yaml").write_text("{}\n")  # a legitimate edit alongside
+git_ops.apply_excludes(PROFILE_OA)
+paths = [c["path"] for c in git_ops.local_changes()]
+check("database sidecars not offered as changes",
+      not any(p.startswith("home-assistant_v2.db") for p in paths), str(paths))
+check("legitimate edit still offered", "input_boolean.yaml" in paths, str(paths))
+git_ops.commit_and_push(None, REPO, "Sync: input_boolean.yaml", PROFILE_OA)
+tracked = sh("git", "-C", str(CONFIG), "ls-files")
+check("database sidecars untracked after commit",
+      not any(name in tracked for name in db_files), tracked)
+
+# 7d) The safety block holds in the "own .gitignore" profile too.
+git_ops.apply_excludes(PROFILE_OWN)
+paths = [c["path"] for c in git_ops.local_changes()]
+check("own-gitignore: database sidecars still excluded",
+      not any(p.startswith("home-assistant_v2.db") for p in paths), str(paths))
+git_ops.apply_excludes(PROFILE_OA)
+for name in db_files:
+    (CONFIG / name).unlink()
+
 # 8) Regression: an unstaged modification is reported as " M <path>" — the
 #    leading space must not be stripped away, or the parser eats the first
 #    character of the path ("ustom_components/…" in commit messages).

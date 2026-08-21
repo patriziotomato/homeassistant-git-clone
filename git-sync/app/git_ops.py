@@ -30,9 +30,10 @@ ALWAYS_EXCLUDE = [
     ".cloud/",
     ".ssh/",
     ".git-credentials",
-    "*.db",
-    "*.db-shm",
-    "*.db-wal",
+    # Deliberately wide: covers the recorder database and everything SQLite
+    # writes beside it (-journal, -shm, -wal) plus manual copies (.db.bak).
+    # Excluding too much here is the safe direction to err in.
+    "*.db*",
     "*.log*",
     ".uuid",
     ".ha_run.lock",
