@@ -56,6 +56,15 @@
   indefinitely, and until now the card simply showed commits sitting there
   with no explanation. The settings hints and the documentation say the same
   thing now.
+- The quiet period before an automatic commit is now really a quiet period.
+  The timer used to run from your *first* change and never restarted, so
+  editing for ten minutes produced a commit every two — each one a snapshot
+  of a half-finished file, described in the commit message as if it were
+  done, all of it in the pull request whose job is to be readable. The timer
+  now restarts with every further edit, so the commit lands once you stop.
+  If you keep editing without a break, a commit is still made after four
+  times the configured period, so nothing piles up uncommitted — that would
+  also hold up changes coming in from main.
 
 ## 0.9.0
 

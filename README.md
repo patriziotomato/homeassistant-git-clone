@@ -121,13 +121,14 @@ Run the test suites (git only, no network required):
 ```bash
 python3 tests/test_git_ops.py   # the whole git engine against a local bare repo
 python3 tests/test_i18n.py      # German/English dictionaries stay in sync
+python3 tests/test_sync.py      # the auto-commit quiet period, on a fake clock
 ```
 
-Both suites run in CI on every push and pull request, next to a
+All three suites run in CI on every push and pull request, next to a
 `home-assistant/builder` test build for all supported architectures. The green
-badge means exactly those two suites passed: the git engine and the
-translation dictionaries. The FastAPI endpoints, the panel and the GitHub
-client have no automated coverage — they are still checked by hand.
+badge means exactly those three passed: the git engine, the translation
+dictionaries and the quiet-period timer. The FastAPI endpoints, the panel and
+the GitHub client have no automated coverage — they are still checked by hand.
 
 ## License
 
