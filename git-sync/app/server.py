@@ -339,6 +339,14 @@ def github_create_repo(payload: dict = Body(...)) -> dict:
     try:
         return gh.create_repo(_token(), name)
     except gh.GitHubError as err:
+        # Creating a repository is an account-level operation. A fine-grained
+        # token scoped to Contents + Pull requests on repositories does not
+        # carry it and GitHub answers 403 — the shared "forbidden" text would
+        # send the user hunting for a repository permission that is already set.
+        if err.kind == "forbidden":
+            LOG.warning("GitHub error (%s) on repository creation: %s",
+                        err.kind, err.detail or "-")
+            raise HTTPException(status_code=403, detail="cannot_create_repo") from err
         raise _github_error(err) from err
 
 

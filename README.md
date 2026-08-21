@@ -89,6 +89,12 @@ Until pre-built images are published, install it as a **local app**:
 The `image:` key in `git-sync/config.yaml` must stay commented out for local
 installs so the image is built on the device.
 
+The setup wizard then asks for a GitHub personal access token. For a
+repository that already exists, a fine-grained token with write access to
+*Contents* and *Pull requests* is enough; creating the repository from the
+wizard needs a classic token with the `repo` scope, because creating a
+repository is an account-level operation.
+
 ## Development
 
 The backend is a small FastAPI service (`git-sync/app/`); the panel is served
