@@ -1,0 +1,21 @@
+# Nothing else tells us when fastapi, uvicorn or httpx ships a security fix:
+# requirements.txt pins exact versions, which is right, but pins go stale
+# silently. Weekly is often enough for a project this size and keeps the
+# pull-request noise low.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /git-sync/app
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: deps
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: ci

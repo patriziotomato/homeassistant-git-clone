@@ -99,6 +99,10 @@
   ever stops responding. Until now a wedged process meant automatic commits
   and pulls silently stopped, with the panel as the only place you could
   have noticed.
+- The documentation now says plainly that the GitHub token is part of Home
+  Assistant's add-on backups. That has always been the case — it is what
+  makes a restore work — but the previous wording read as if the token never
+  left the instance at all.
 
 ## 0.9.0
 
