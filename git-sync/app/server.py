@@ -74,6 +74,10 @@ PROFILES = {
 }
 
 
+# How many of the affected paths the panel shows before falling back to a count.
+DELETION_PREVIEW = 10
+
+
 def _github_error(err: gh.GitHubError) -> HTTPException:
     LOG.warning("GitHub error (%s): %s", err.kind, err.detail or "-")
     status = {"invalid_token": 401, "forbidden": 403, "network": 502}.get(err.kind, 502)
@@ -195,8 +199,17 @@ def sync_couple(payload: dict = Body(default={})) -> dict:
     if not sync.configured():
         raise HTTPException(status_code=409, detail="not_configured")
     try:
-        return sync.couple(force_remote=bool(payload.get("force_remote")))
+        return sync.couple(force_remote=bool(payload.get("force_remote")),
+                           confirm_deletions=bool(payload.get("confirm_deletions")))
     except git_ops.GitError as err:
+        if err.kind == "would_delete":
+            # Not a failure the user should read as one: it is the question
+            # "shall the first pull request really propose deleting these?".
+            # Answered by posting again with confirm_deletions.
+            LOG.info("Coupling would propose deleting %d path(s) on main", len(err.paths))
+            return {"coupling": "would_delete",
+                    "would_delete": {"paths": err.paths[:DELETION_PREVIEW],
+                                     "total": len(err.paths)}}
         raise _git_error(err) from err
 
 

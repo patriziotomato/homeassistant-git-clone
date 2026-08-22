@@ -26,6 +26,12 @@ conflicts instead of resolving them inside Home Assistant:
    link from the app. There is deliberately no diff/merge UI inside
    Home Assistant.
 
+The first pull request reconciles the repository with your instance in both
+directions: anything already on `main` that your configuration does not have
+appears in it as a deletion. Git Sync stops before coupling when that is the
+case, lists the files and asks you to confirm — and `main` still only changes
+when you merge.
+
 On the GitHub side, leave the repository setting **"Automatically delete head
 branches"** switched off. Git Sync manages the lifetime of the sync branch
 itself — it removes the branch after a merge from the panel and recreates it
