@@ -127,6 +127,18 @@ backups, so the token is inside every backup that includes this app —
 including backups you upload to cloud storage. That is what makes a restore
 work, but treat those backups accordingly.
 
+## Installing and updating
+
+Git Sync ships as an **app repository**: adding
+`https://github.com/patriziotomato/homeassistant-git-clone` under
+**Settings → Apps → App store → ⋮ → Repositories** makes released versions
+installable, with a pre-built image for aarch64 and amd64 — no build on your
+device, and updates arrive as a layer pull.
+
+Copying the `git-sync/` folder into `/addons` also works and builds the image
+on the instance. That is the path for an unreleased state, and it takes
+several minutes on small hardware.
+
 ## Configuration
 
 No add-on options yet — everything is configured in the panel. The app maps

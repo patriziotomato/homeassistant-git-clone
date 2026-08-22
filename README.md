@@ -83,19 +83,40 @@ Core container, so it would have to become a pure-Python implementation. That
 trade is not planned. If it is ever revisited, it belongs in a separate project
 rather than in a rewrite of this one.
 
-## Installing (for testing)
+## Installing
 
-Until pre-built images are published, install it as a **local app**:
+Two paths. Which one applies depends on whether the version you want has
+published images.
+
+### From the app repository
+
+For released versions, once their images are on ghcr.io:
+
+1. In Home Assistant open **Settings → Apps → App store**, choose
+   **⋮ → Repositories**.
+2. Add `https://github.com/patriziotomato/homeassistant-git-clone`.
+3. *Git Sync* appears in the store — install and start it. The panel shows up
+   in the sidebar via ingress.
+
+Nothing is built on your device: the image is pulled for your architecture
+(aarch64 or amd64), and updates are a layer pull rather than another build.
+This path needs the `image:` key in `git-sync/config.yaml` to be enabled,
+which happens in the release that publishes the images.
+
+### As a local app
+
+Always available, and the path for developing or for an unreleased state:
 
 1. Copy the `git-sync/` folder to the `/addons` directory of your
    Home Assistant instance (e.g. via the SSH or Samba add-on).
 2. In Home Assistant open **Settings → Apps → App store**, choose
    **⋮ → Check for updates**.
-3. *Git Sync* appears under **Local apps** — install and start it. The panel
-   shows up in the sidebar via ingress.
+3. *Git Sync* appears under **Local apps** — install and start it.
 
-The `image:` key in `git-sync/config.yaml` must stay commented out for local
-installs so the image is built on the device.
+The image is built on the device, which takes several minutes on a Raspberry
+Pi. The `image:` key must stay commented out for this path — which is how it
+is kept in the working tree, so a local `/addons` copy never pulls a
+published image instead of building the folder in front of it.
 
 The setup wizard then asks for a GitHub personal access token. For a
 repository that already exists, a fine-grained token with write access to
