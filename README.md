@@ -52,9 +52,9 @@ automatic commit messages.
 
 ## Status
 
-The app works end to end: milestones 1–4 are implemented and in use, and 1.0.0
-is published with pre-built images. Read the two caveats below before
-installing.
+The app works end to end: milestones 1–4 are implemented and in use, and
+releases are published with pre-built images. Read the two caveats below
+before installing.
 
 - [x] Milestone 1 — app skeleton: ingress panel with a read-only git status
       view of the configuration directory

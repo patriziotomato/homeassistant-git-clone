@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2
+
+- Maintenance release: the components the app is built on have been updated to
+  their current versions. Nothing about how the app works changes — the point
+  is to keep up with the fixes in those components, not to ship a feature.
+
 ## 1.0.0
 
 - The built-in safety exclusions are now re-established every time the app
