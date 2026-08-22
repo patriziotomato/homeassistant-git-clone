@@ -28,6 +28,7 @@ map:
     read_only: false
 options: {}
 schema: {}
-# Enabled at publish time (pre-built images on ghcr.io). Keep commented out
-# while developing so Home Assistant builds the image locally from this folder:
-# image: ghcr.io/patriziotomato/{arch}-git-sync
+# Pre-built images on ghcr.io, pushed by .github/workflows/publish.yaml when a
+# version tag is pushed. For local development, comment this key out in your own
+# copy so Home Assistant builds this folder instead of pulling.
+image: ghcr.io/patriziotomato/{arch}-git-sync

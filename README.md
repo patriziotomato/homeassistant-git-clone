@@ -120,8 +120,6 @@ For released versions, once their images are on ghcr.io:
 
 Nothing is built on your device: the image is pulled for your architecture
 (aarch64 or amd64), and updates are a layer pull rather than another build.
-This path needs the `image:` key in `git-sync/config.yaml` to be enabled,
-which happens in the release that publishes the images.
 
 ### As a local app
 
@@ -133,10 +131,10 @@ Always available, and the path for developing or for an unreleased state:
    **⋮ → Check for updates**.
 3. *Git Sync* appears under **Local apps** — install and start it.
 
-The image is built on the device, which takes several minutes on a Raspberry
-Pi. The `image:` key must stay commented out for this path — which is how it
-is kept in the working tree, so a local `/addons` copy never pulls a
-published image instead of building the folder in front of it.
+For this path, comment the `image:` key out in your copy of
+`git-sync/config.yaml` — otherwise Home Assistant pulls the published image
+instead of building the folder in front of it. The build then takes several
+minutes on a Raspberry Pi.
 
 The setup wizard then asks for a GitHub personal access token. For a
 repository that already exists, a fine-grained token with write access to

@@ -140,9 +140,10 @@ Git Sync ships as an **app repository**: adding
 installable, with a pre-built image for aarch64 and amd64 — no build on your
 device, and updates arrive as a layer pull.
 
-Copying the `git-sync/` folder into `/addons` also works and builds the image
-on the instance. That is the path for an unreleased state, and it takes
-several minutes on small hardware.
+Copying the `git-sync/` folder into `/addons` also works, but comment the
+`image:` key out in your copy first — otherwise Home Assistant pulls the
+published image rather than building the folder. That is the path for an
+unreleased state, and the build takes several minutes on small hardware.
 
 ## Configuration
 
