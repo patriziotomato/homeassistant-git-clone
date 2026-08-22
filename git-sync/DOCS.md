@@ -55,11 +55,20 @@ exclusions off — and hand edits between the markers do not survive.
 
 ## GitHub token
 
-The wizard asks for a personal access token:
+The wizard asks for a personal access token. Which kind you need depends on
+whether the repository already exists:
 
-- **Classic token**: `repo` scope.
-- **Fine-grained token**: read/write access to *Contents* and
-  *Pull requests* for the target repository.
+- **Using a repository that already exists** — a **fine-grained token** with
+  read/write access to *Contents* and *Pull requests* for that repository is
+  enough. Create the repository on GitHub first, then pick it in the wizard.
+- **Creating the repository from the wizard** — creating a repository is an
+  account-level operation, which a fine-grained token scoped to repository
+  permissions does not carry. That needs a **classic token** with the `repo`
+  scope. With a fine-grained token the wizard now says so instead of showing a
+  generic permission error.
+
+(GitHub's permission model as tested in August 2026 — GitHub changes it from
+time to time.)
 
 The token is validated against the GitHub API and stored only in the app's
 private `/data` volume on your instance. It is never written to the

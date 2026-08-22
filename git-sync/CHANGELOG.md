@@ -35,6 +35,17 @@
   restart started from the panel cleared it — restarting from Developer
   Tools, the Supervisor or the power switch left it standing for good,
   asking you to do what you had just done.
+- Creating a repository from the setup wizard now says what is actually
+  wrong when it fails. A fine-grained token cannot create repositories —
+  that is an account-level permission — and the wizard used to answer with
+  the generic "GitHub denied access — is the token missing permissions?",
+  sending you looking for a repository permission that was already set. It
+  now names the two ways forward: create the repository on GitHub and pick
+  it from the list, or use a classic token.
+- The wizard, the documentation and the README now say which token does
+  what: a fine-grained token with Contents and Pull-request write access is
+  enough for a repository that already exists, while creating one from the
+  wizard needs a classic token with the repo scope.
 
 ## 0.9.0
 
