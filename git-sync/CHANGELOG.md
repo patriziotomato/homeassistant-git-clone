@@ -46,6 +46,10 @@
   what: a fine-grained token with Contents and Pull-request write access is
   enough for a repository that already exists, while creating one from the
   wizard needs a classic token with the repo scope.
+- The panel has a dark mode. Until now it was a bright white rectangle in
+  the middle of a dark Home Assistant; it now follows the light/dark setting
+  of your browser or operating system, across the dashboard, the setup
+  wizard, the settings and every status colour.
 
 ## 0.9.0
 
