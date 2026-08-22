@@ -35,7 +35,55 @@ NOTIFY_CONFLICT_ID = "git_sync_conflict"
 NOTIFY_PR_ID = "git_sync_pr_waiting"
 NOTIFY_RESTART_ID = "git_sync_restart"
 
-_first_dirty_at: float | None = None
+# A commit is forced after this multiple of the delay even while edits keep
+# arriving: without it, continuous editing would never commit at all — and an
+# uncommitted tree also blocks auto-pull (see #28).
+AUTO_COMMIT_CAP = 4
+
+# Two clocks, because the quiet period and the cap measure different things:
+# _quiet_since restarts whenever the change set differs from the previous
+# tick, _dirty_since runs from the clean -> dirty transition and never
+# restarts until the tree is clean again.
+_dirty_since: float | None = None
+_quiet_since: float | None = None
+_dirty_signature: str | None = None
+
+
+def _changes_signature(changes: list[dict]) -> str:
+    """What the working tree looks like this tick — paths plus their states.
+
+    Enough to notice an edit: a new file, a removed one, or a path moving
+    between states. Not content — two saves of the same file inside one poll
+    interval look identical, and a poll interval of quiet is not the point.
+    """
+    return "\n".join(sorted(f"{c['state']} {c['path']}" for c in changes))
+
+
+def observe_changes(changes: list[dict], now: float) -> None:
+    """Advance the quiet-period clocks from this tick's change set."""
+    global _dirty_since, _quiet_since, _dirty_signature
+    if not changes:
+        _dirty_since = _quiet_since = _dirty_signature = None
+        return
+    signature = _changes_signature(changes)
+    if _dirty_since is None:
+        _dirty_since = now
+    if signature != _dirty_signature:
+        _dirty_signature = signature
+        _quiet_since = now
+
+
+def auto_commit_deadline(delay: int) -> float | None:
+    """When the next automatic commit is due — quiet period or cap, whichever
+    comes first. None while the tree is clean."""
+    if _quiet_since is None or _dirty_since is None:
+        return None
+    return min(_quiet_since + delay, _dirty_since + delay * AUTO_COMMIT_CAP)
+
+
+def _reset_quiet_period() -> None:
+    global _dirty_since, _quiet_since, _dirty_signature
+    _dirty_since = _quiet_since = _dirty_signature = None
 
 
 def effective_settings(stored: dict | None = None) -> dict:
@@ -105,7 +153,6 @@ def ensure_pr(token: str, repo: dict, language: str | None = None) -> dict | Non
 
 
 def commit_now(message: str | None) -> dict:
-    global _first_dirty_at
     token, repo, profile, settings = _ctx()
     # Before the working tree is read: without the managed block a lost
     # .git/info/exclude would put secrets.yaml & friends into the change list
@@ -119,7 +166,7 @@ def commit_now(message: str | None) -> dict:
         return {"committed": None}
     text = (message or "").strip() or auto_message(changes, settings)
     sha = git_ops.commit_and_push(token, repo, text, profile)
-    _first_dirty_at = None
+    _reset_quiet_period()
     # The commit is safely pushed at this point — a failing PR creation must
     # not fail the whole call. The poller and the dashboard retry it.
     try:
@@ -337,6 +384,7 @@ def full_status() -> dict:
         return result
 
     changes = git_ops.local_changes()
+    due = auto_commit_deadline(settings["auto_commit_delay"])
     result.update(
         changes=changes,
         suggested_message=auto_message(changes, settings) if changes else None,
@@ -347,9 +395,7 @@ def full_status() -> dict:
         outgoing=git_ops.outgoing_commits(repo),
         core=state.get("core"),
         auto_commit_at=(
-            int(_first_dirty_at + settings["auto_commit_delay"])
-            if _first_dirty_at and settings["auto_commit"] and changes
-            else None
+            int(due) if due is not None and settings["auto_commit"] and changes else None
         ),
     )
     try:
@@ -370,20 +416,17 @@ _last_pr_check = 0.0
 async def poller():
     """Background loop: watch for local edits (auto-commit after a quiet
     period), new commits on main (auto-pull), and notification triggers."""
-    global _first_dirty_at, _last_pr_check
+    global _last_pr_check
     while True:
         try:
             token, repo, profile, settings = _ctx()
             if token and repo and profile and git_ops.coupling_state(repo) == "coupled":
                 changes = await asyncio.to_thread(git_ops.local_changes)
-                if changes:
-                    if _first_dirty_at is None:
-                        _first_dirty_at = time.time()
-                    quiet = time.time() - _first_dirty_at
-                    if settings["auto_commit"] and quiet >= settings["auto_commit_delay"]:
-                        await asyncio.to_thread(commit_now, None)
-                else:
-                    _first_dirty_at = None
+                now = time.time()
+                observe_changes(changes, now)
+                due = auto_commit_deadline(settings["auto_commit_delay"])
+                if changes and settings["auto_commit"] and due is not None and now >= due:
+                    await asyncio.to_thread(commit_now, None)
                 if settings["auto_pull"]:
                     await asyncio.to_thread(git_ops.fetch, token, repo)
                     behind = git_ops.incoming_count(repo)

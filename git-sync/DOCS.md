@@ -9,7 +9,11 @@ Couples your Home Assistant configuration to a GitHub repository.
   uncommitted local changes. Automatic pulling waits for a clean state, and
   with auto-commit switched off it waits until you commit yourself.
 - **Local changes** (from the UI, File Editor, SSH, …) are committed onto a
-  dedicated sync branch and collect in **one open pull request**.
+  dedicated sync branch and collect in **one open pull request**. The
+  automatic commit waits for a quiet period: the timer restarts with every
+  further edit, so a commit lands once you stop — and, if you keep editing
+  for a long time, after four times the configured period at the latest, so
+  that changes do not pile up uncommitted.
 - Merging that pull request is always a **manual action** — from this panel
   or on GitHub. Nothing is ever committed directly to main.
 - **Conflicts are resolved on GitHub** in the pull request; the panel links

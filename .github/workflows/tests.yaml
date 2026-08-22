@@ -17,9 +17,12 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v7
 
-      # Both suites need only git and the standard library — no install step.
+      # All three suites need only git and the standard library — no install step.
       - name: Git engine against a local bare repo
         run: python3 tests/test_git_ops.py
 
       - name: German/English dictionaries in sync
         run: python3 tests/test_i18n.py
+
+      - name: Auto-commit quiet period
+        run: python3 tests/test_sync.py
