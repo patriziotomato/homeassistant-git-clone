@@ -126,3 +126,9 @@ repository and never returned by the app's API.
 No add-on options yet — everything is configured in the panel. The app maps
 your Home Assistant configuration directory read-write and serves its panel
 through ingress.
+
+Its Supervisor role is `homeassistant`: enough for the configuration check,
+the restart and the notification service, and nothing beyond that — it cannot
+see or manage your other add-ons. Home Assistant supervises the app through
+its `/api/health` endpoint and restarts it if the background loop stops
+responding.

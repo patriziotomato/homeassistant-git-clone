@@ -90,6 +90,15 @@
   fraction of the previous requests to GitHub for a completely idle instance.
   The interval in the settings is that idle cadence; if you had set it
   yourself, your choice is untouched.
+- The app now asks the Supervisor for fewer permissions than before. It only
+  ever talked to Home Assistant Core — the configuration check, the restart
+  and the notification service — but held the broader "manager" role, which
+  also allows managing your other add-ons and reading their configuration
+  including their secrets. It no longer does.
+- Home Assistant now watches the app and restarts it if its background loop
+  ever stops responding. Until now a wedged process meant automatic commits
+  and pulls silently stopped, with the panel as the only place you could
+  have noticed.
 
 ## 0.9.0
 

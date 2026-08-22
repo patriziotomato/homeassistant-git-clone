@@ -9,9 +9,18 @@ arch:
 init: false
 homeassistant_api: true
 hassio_api: true
-hassio_role: manager
+# Least privilege: the app only calls /core/api/services/..., /core/check
+# and /core/restart. Per the Supervisor's security middleware /core/.+ is
+# granted to the homeassistant role and /core/api/... bypasses the role
+# check entirely, so manager — which also grants add-on management,
+# including reading other add-ons' configuration and secrets — is broader
+# than anything here needs.
+hassio_role: homeassistant
 ingress: true
 ingress_port: 8099
+# The app's job is a background loop; a silently wedged poller would stop
+# auto-commit and auto-pull with the panel as the only place to notice.
+watchdog: http://[HOST]:[PORT:8099]/api/health
 panel_icon: mdi:source-branch
 panel_title: Git Sync
 map:
