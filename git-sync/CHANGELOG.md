@@ -2,9 +2,9 @@
 
 ## 1.0.2
 
-- Maintenance release: the components the app is built on have been updated to
-  their current versions. Nothing about how the app works changes — the point
-  is to keep up with the fixes in those components, not to ship a feature.
+- Maintenance release: the web framework the app is built on has been brought
+  up to date. Nothing about how the app works changes — the point is to keep up
+  with the fixes in that framework, not to ship a feature.
 
 ## 1.0.0
 
