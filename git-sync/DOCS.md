@@ -5,7 +5,9 @@ Couples your Home Assistant configuration to a GitHub repository.
 ## How it works
 
 - Your **main branch is the source of truth**: changes merged there are
-  pulled onto the instance automatically.
+  pulled onto the instance automatically — as soon as there are no
+  uncommitted local changes. Automatic pulling waits for a clean state, and
+  with auto-commit switched off it waits until you commit yourself.
 - **Local changes** (from the UI, File Editor, SSH, …) are committed onto a
   dedicated sync branch and collect in **one open pull request**.
 - Merging that pull request is always a **manual action** — from this panel

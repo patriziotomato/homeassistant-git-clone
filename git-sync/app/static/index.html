@@ -505,6 +505,7 @@
               <span id="incount" class="chip hidden"></span>
             </div>
             <div id="incoming" class="empty" data-i18n="incoming.empty.plain"></div>
+            <div id="pullblocked" class="hint hidden"></div>
             <div class="row actions hidden" id="pullrow">
               <span class="grow"></span>
               <button class="btn" id="pullbtn" data-i18n="incoming.pull"></button>
@@ -775,6 +776,8 @@
       'incoming.empty.plain': 'Auf Stand mit main.',
       'incoming.count': '{count} Commit(s)',
       'incoming.pull': 'Jetzt übernehmen',
+      'incoming.blocked.auto': 'Wartet auf einen sauberen Stand: {count} Commit(s) aus main werden übernommen, sobald deine lokalen Änderungen committet sind — der Auto-Commit erledigt das gleich.',
+      'incoming.blocked.manual': 'Wartet auf einen sauberen Stand: {count} Commit(s) aus main werden erst übernommen, wenn deine lokalen Änderungen committet sind. Auto-Commit ist aus — „Jetzt übernehmen“ macht beides in einem Schritt.',
       'incoming.applied.title': 'Zuletzt übernommen',
       'setup.title': 'Einrichtung',
       'setup.repo': 'Repository: {repo} · Main: {main} · Sync: {sync}',
@@ -786,13 +789,13 @@
       'settings.title': 'Einstellungen',
       'settings.sync.title': 'Synchronisation',
       'settings.autopull': 'Änderungen aus main automatisch übernehmen',
-      'settings.autopull.hint': 'Prüft im Hintergrund auf neue Commits',
+      'settings.autopull.hint': 'Prüft im Hintergrund auf neue Commits — übernommen wird erst, wenn keine lokalen Änderungen offen sind',
       'settings.pollinterval': 'Prüf-Intervall',
       'settings.poll.30': 'Alle 30 Sekunden',
       'settings.poll.60': 'Jede Minute',
       'settings.poll.300': 'Alle 5 Minuten',
       'settings.autocommit': 'Lokale Änderungen automatisch committen',
-      'settings.autocommit.hint': 'In den offenen Sync-PR, nach einer Ruhephase',
+      'settings.autocommit.hint': 'In den offenen Sync-PR, nach einer Ruhephase. Ausgeschaltet liegt das Committen — und damit auch die Übernahme aus main — bei dir',
       'settings.commitdelay': 'Ruhephase vor Auto-Commit',
       'settings.delay.15': '15 Sekunden',
       'settings.delay.120': '2 Minuten',
@@ -945,6 +948,8 @@
       'incoming.empty.plain': 'Up to date with main.',
       'incoming.count': '{count} commit(s)',
       'incoming.pull': 'Apply now',
+      'incoming.blocked.auto': 'Waiting for a clean tree: {count} commit(s) from main will be applied as soon as your local changes are committed — auto-commit will do that shortly.',
+      'incoming.blocked.manual': 'Waiting for a clean tree: {count} commit(s) from main will only be applied once your local changes are committed. Auto-commit is off — “Apply now” does both in one step.',
       'incoming.applied.title': 'Recently applied',
       'setup.title': 'Setup',
       'setup.repo': 'Repository: {repo} · Main: {main} · Sync: {sync}',
@@ -956,13 +961,13 @@
       'settings.title': 'Settings',
       'settings.sync.title': 'Synchronisation',
       'settings.autopull': 'Apply changes from main automatically',
-      'settings.autopull.hint': 'Checks for new commits in the background',
+      'settings.autopull.hint': 'Checks for new commits in the background — they are applied once no local changes are pending',
       'settings.pollinterval': 'Check interval',
       'settings.poll.30': 'Every 30 seconds',
       'settings.poll.60': 'Every minute',
       'settings.poll.300': 'Every 5 minutes',
       'settings.autocommit': 'Commit local changes automatically',
-      'settings.autocommit.hint': 'Into the open sync PR, after a quiet period',
+      'settings.autocommit.hint': 'Into the open sync PR, after a quiet period. Switched off, committing — and with it applying main — is up to you',
       'settings.commitdelay': 'Quiet period before auto-commit',
       'settings.delay.15': '15 seconds',
       'settings.delay.120': '2 minutes',
@@ -1576,6 +1581,18 @@
     chipEl.classList.toggle('hidden', count === 0);
     el('pullrow').classList.toggle('hidden', count === 0);
     renderApplied(s);
+    // Auto-pull only integrates into a clean tree (integrate() raises on a
+    // dirty one). With auto-commit off that pause is indefinite, and nothing
+    // in the panel used to say so — last_pull simply stopped moving.
+    // Toggled before the early return so it cannot linger once main is caught up.
+    var blocked = el('pullblocked');
+    var waiting = count > 0 && s.settings.auto_pull && (s.changes || []).length > 0;
+    blocked.classList.toggle('hidden', !waiting);
+    if (waiting) {
+      blocked.textContent = s.settings.auto_commit
+        ? t('incoming.blocked.auto', { count: count })
+        : t('incoming.blocked.manual', { count: count });
+    }
     if (count === 0) {
       list.textContent = t('incoming.empty', { branch: s.repo.main_branch });
       list.classList.add('empty');

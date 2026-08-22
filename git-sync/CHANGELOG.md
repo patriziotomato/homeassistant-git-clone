@@ -50,6 +50,12 @@
   the middle of a dark Home Assistant; it now follows the light/dark setting
   of your browser or operating system, across the dashboard, the setup
   wizard, the settings and every status colour.
+- The dashboard now says why nothing is arriving from main. Automatic
+  pulling waits until there are no uncommitted local changes — with
+  auto-commit on that is a short delay, with auto-commit off it waits
+  indefinitely, and until now the card simply showed commits sitting there
+  with no explanation. The settings hints and the documentation say the same
+  thing now.
 
 ## 0.9.0
 

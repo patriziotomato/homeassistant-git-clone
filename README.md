@@ -13,7 +13,9 @@ and conflicts end up being resolved by hand on the box. Git Sync avoids
 conflicts instead of resolving them inside Home Assistant:
 
 1. **`main` is the source of truth.** Changes merged to your main branch are
-   pulled onto the instance as quickly as possible (webhook or polling).
+   pulled onto the instance as quickly as possible (webhook or polling) —
+   once there are no uncommitted local changes. Pulling always waits for a
+   clean state; with auto-commit switched off, committing is up to you.
 2. **Local changes are committed away quickly** — always onto a dedicated
    sync branch that accumulates in **one open pull request**. There is no
    way to commit directly to main, by design.
