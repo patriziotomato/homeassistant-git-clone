@@ -80,12 +80,17 @@ device running in light mode will still show a light panel.
 
 ## Current state
 
-This is an early preview (milestone 4): setup wizard, the working sync
+Everything the app promises is built and works: the setup wizard, the sync
 engine — coupling the configuration directory, auto-committing local edits
 onto the sync branch, one collecting pull request, background auto-pull of
-main, merging the PR from the panel (conflicts lock the merge and link to
-the pull request on GitHub) — plus a settings view and persistent Home
-Assistant notifications on conflicts and long-waiting sync PRs.
+main, merging the PR from the panel (conflicts lock the merge and link to the
+pull request on GitHub) — plus a settings view, light and dark mode, and
+persistent Home Assistant notifications on conflicts and long-waiting sync
+PRs.
+
+Two things are worth knowing: the GitHub connection is a personal access
+token rather than a device-flow login, and the app is young — it has not seen
+wide use yet.
 
 ## Sync profiles
 

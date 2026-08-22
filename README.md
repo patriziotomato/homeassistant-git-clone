@@ -13,9 +13,12 @@ and conflicts end up being resolved by hand on the box. Git Sync avoids
 conflicts instead of resolving them inside Home Assistant:
 
 1. **`main` is the source of truth.** Changes merged to your main branch are
-   pulled onto the instance as quickly as possible (webhook or polling) —
-   once there are no uncommitted local changes. Pulling always waits for a
-   clean state; with auto-commit switched off, committing is up to you.
+   pulled onto the instance by polling — every ten seconds for a few minutes
+   around a merge or a manual pull, and every five minutes when idle. There is
+   deliberately no webhook: most instances are not reachable from the internet,
+   and an inbound endpoint would be a material change to the security posture
+   ([#16](https://github.com/patriziotomato/homeassistant-git-clone/issues/16) records the reasoning). Pulling always waits for a clean
+   state; with auto-commit switched off, committing is up to you.
 2. **Local changes are committed away quickly** — always onto a dedicated
    sync branch that accumulates in **one open pull request**. There is no
    way to commit directly to main, by design.
@@ -49,15 +52,32 @@ automatic commit messages.
 
 ## Status
 
-Early development.
+The app works end to end: milestones 1–4 are implemented and in use. What is
+still missing is publication, so read the last two points before installing.
 
 - [x] Milestone 1 — app skeleton: ingress panel with a read-only git status
       view of the configuration directory
-- [ ] Milestone 2 — GitHub connection (device flow), repository & branch setup
-- [ ] Milestone 3 — sync profiles (file groups, application lockfile mode)
-- [ ] Milestone 4 — the sync-PR workflow: auto-commit, accumulating PR,
+- [x] Milestone 2 — GitHub connection, repository & branch setup. The
+      connection is a personal access token; the **device flow** this
+      milestone originally named is not built ([#15](https://github.com/patriziotomato/homeassistant-git-clone/issues/15))
+- [x] Milestone 3 — sync profiles (file groups, application lockfile mode)
+- [x] Milestone 4 — the sync-PR workflow: auto-commit, accumulating PR,
       manual merge from the panel, conflict deep links
 - [ ] Publishing: pre-built multi-arch images, public app repository
+      ([#14](https://github.com/patriziotomato/homeassistant-git-clone/issues/14)) — the release workflow exists, the published images
+      do not yet
+
+Concretely, before calling this ready for general use:
+
+- **No pre-built images yet.** Every installation still builds the container
+  on the device, which takes several minutes on a Raspberry Pi. Until the
+  first tag is published, "Installing → As a local app" below is the only
+  path that works.
+- **Automated coverage stops at the engine.** The git engine, the
+  dictionaries, the quiet-period timer and the state file are tested; the
+  FastAPI endpoints, the panel and the GitHub client are checked by hand.
+- Ticking milestones 2–4 says the mechanisms are built and work, not that the
+  app has seen wide use. It has not.
 
 ## Distribution
 
