@@ -266,6 +266,12 @@ def sync_restart() -> dict:
     return result
 
 
+@app.post("/api/sync/restart-dismiss")
+def sync_restart_dismiss() -> dict:
+    """The user restarted Home Assistant some other way — drop the banner."""
+    return sync.dismiss_restart()
+
+
 @app.post("/api/sync/settings")
 def sync_settings(payload: dict = Body(...)) -> dict:
     state = store.load()

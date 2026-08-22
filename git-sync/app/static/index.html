@@ -206,6 +206,14 @@
         <span class="grow"></span>
         <button class="btn" id="connect" data-i18n="step1.connect"></button>
       </div>
+      <div id="step1connected" class="hidden">
+        <div class="divider" style="margin-bottom:14px"></div>
+        <div class="row actions">
+          <span class="meta grow" id="step1connectedtext"></span>
+          <button class="btn text danger" id="step1disconnect" data-i18n="common.disconnect"></button>
+          <button class="btn" id="next1" data-i18n="common.next"></button>
+        </div>
+      </div>
       <div class="shield">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px"><path d="M12 3l8 3v6c0 4.5-3.5 8-8 9-4.5-1-8-4.5-8-9V6l8-3z"></path><path d="M9 12l2 2 4-4"></path></svg>
         <span data-i18n-html="step1.shield"></span>
@@ -228,6 +236,7 @@
         <div class="grow">
           <div class="label" style="margin-bottom:6px" data-i18n="step2.mainbranch.label"></div>
           <select id="mainbranch"></select>
+          <div id="step2empty" class="error hidden" style="margin-top:4px" data-i18n="step2.empty"></div>
           <div class="meta" style="margin-top:4px" data-i18n="step2.mainbranch.hint"></div>
         </div>
         <div class="grow">
@@ -295,6 +304,7 @@
           <div id="checkerror" class="error mono hidden" style="white-space:pre-wrap"></div>
           <div class="row actions">
             <span class="grow"></span>
+            <button class="btn text" id="dismissrestart" data-i18n="restart.dismiss"></button>
             <button class="btn text" id="recheckbtn" data-i18n="restart.recheck"></button>
             <button class="btn" id="restartbtn" data-i18n="restart.button"></button>
           </div>
@@ -562,6 +572,7 @@
       'step1.heading': 'Mit GitHub verbinden',
       'step1.intro': 'Git Sync koppelt deine Home-Assistant-Konfiguration an ein GitHub-Repository. Erstelle einen <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Personal Access Token</a> (klassisch mit <span class="mono">repo</span>-Scope, oder fine-grained mit Contents- und Pull-Request-Schreibrechten) und füge ihn hier ein.',
       'step1.connect': 'Verbinden',
+      'step1.connected': 'Verbunden als {login} — der Token bleibt gespeichert.',
       'step1.shield': '<strong>Schutz aktiv:</strong> <span class="mono">secrets.yaml</span>, <span class="mono">.storage/</span> (Zugangsdaten &amp; Token) und Datenbanken werden niemals übertragen. Der Token bleibt lokal in dieser App gespeichert.',
       'step2.heading': 'Repository & Branch',
       'step2.repo.label': 'Repository',
@@ -570,6 +581,7 @@
       'step2.newrepo.placeholder': 'Name für neues privates Repo',
       'step2.create': 'Anlegen',
       'step2.mainbranch.label': 'Main-Branch (Quelle der Wahrheit)',
+      'step2.empty': 'Dieses Repository hat noch keinen Commit und damit keinen Branch. Lege im Assistenten ein neues Repository an, oder erstelle auf GitHub einen ersten Commit (z. B. eine README) und wähle es dann hier aus.',
       'step2.mainbranch.hint': 'Wird automatisch auf deine Instanz übernommen.',
       'step2.syncbranch.label': 'Sync-Branch',
       'step2.syncbranch.hint': 'Hier sammelt Git Sync deine lokalen Änderungen.',
@@ -580,7 +592,6 @@
       'step3.gitignore.hint': 'Deine <span class="mono">.gitignore</span> bestimmt, was ins Repository wandert — du pflegst sie hier selbst. Änderungen werden wie jede andere Datei mitversioniert.',
       'step3.always': 'Immer ausgeschlossen und nicht abwählbar — unabhängig vom Profil: <span class="mono">secrets.yaml · .storage/ (Rohdaten) · *.db* (Datenbank samt Journal- und Kopiedateien) · Logs &amp; Caches</span>',
       'step3.finish': 'Einrichtung abschließen',
-      'profile.recommended': 'Empfohlen',
       'profile.eigene_gitignore.name': 'Eigene .gitignore',
       'profile.eigene_gitignore.desc': 'Deine .gitignore bestimmt den Umfang — du pflegst sie selbst.',
       'profile.komplett.name': 'Komplett',
@@ -613,6 +624,7 @@
       'couple.config_missing': 'Konfigurationsverzeichnis nicht gefunden.',
       'restart.title': 'Änderungen übernommen — Neustart ausstehend',
       'restart.recheck': 'Prüfung wiederholen',
+      'restart.dismiss': 'Bereits neu gestartet',
       'restart.button': 'Home Assistant neu starten',
       'restart.check.ok': 'Prüfung OK',
       'restart.check.error': 'Prüfung fehlgeschlagen',
@@ -664,7 +676,7 @@
       'setup.profile': 'Profil: {profile}',
       'setup.lockfile': ' · Anwendungen als Lockfile',
       'setup.editgitignore': '.gitignore bearbeiten',
-      'disconnect.confirm': 'Verbindung zu GitHub trennen? Repo- und Profil-Einstellungen werden zurückgesetzt.',
+      'disconnect.confirm': 'Verbindung zu GitHub trennen? Repo- und Profil-Einstellungen werden zurückgesetzt und der Token gelöscht — GitHub zeigt ihn kein zweites Mal an.',
       'settings.back': '← Zurück',
       'settings.title': 'Einstellungen',
       'settings.sync.title': 'Synchronisation',
@@ -729,6 +741,7 @@
       'step1.heading': 'Connect to GitHub',
       'step1.intro': 'Git Sync couples your Home Assistant configuration to a GitHub repository. Create a <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">personal access token</a> (classic with the <span class="mono">repo</span> scope, or fine-grained with write access to Contents and Pull requests) and paste it here.',
       'step1.connect': 'Connect',
+      'step1.connected': 'Connected as {login} — the token stays stored.',
       'step1.shield': '<strong>Protection active:</strong> <span class="mono">secrets.yaml</span>, <span class="mono">.storage/</span> (credentials &amp; tokens) and databases are never transferred. The token stays stored locally in this app.',
       'step2.heading': 'Repository & branch',
       'step2.repo.label': 'Repository',
@@ -737,6 +750,7 @@
       'step2.newrepo.placeholder': 'Name for a new private repo',
       'step2.create': 'Create',
       'step2.mainbranch.label': 'Main branch (source of truth)',
+      'step2.empty': 'This repository has no commit yet, and therefore no branch. Create a new repository from the wizard, or add a first commit on GitHub (a README, say) and pick it here afterwards.',
       'step2.mainbranch.hint': 'Applied to your instance automatically.',
       'step2.syncbranch.label': 'Sync branch',
       'step2.syncbranch.hint': 'Where Git Sync collects your local changes.',
@@ -747,7 +761,6 @@
       'step3.gitignore.hint': 'Your <span class="mono">.gitignore</span> decides what ends up in the repository — you maintain it yourself, right here. Changes to it are versioned like any other file.',
       'step3.always': 'Always excluded and not selectable — regardless of the profile: <span class="mono">secrets.yaml · .storage/ (raw data) · *.db* (database plus its journal and copy files) · logs &amp; caches</span>',
       'step3.finish': 'Finish setup',
-      'profile.recommended': 'Recommended',
       'profile.eigene_gitignore.name': 'Your own .gitignore',
       'profile.eigene_gitignore.desc': 'Your .gitignore defines the scope — you maintain it yourself.',
       'profile.komplett.name': 'Complete',
@@ -780,6 +793,7 @@
       'couple.config_missing': 'Configuration directory not found.',
       'restart.title': 'Changes applied — restart pending',
       'restart.recheck': 'Check again',
+      'restart.dismiss': 'Already restarted',
       'restart.button': 'Restart Home Assistant',
       'restart.check.ok': 'Check OK',
       'restart.check.error': 'Check failed',
@@ -831,7 +845,7 @@
       'setup.profile': 'Profile: {profile}',
       'setup.lockfile': ' · applications as a lockfile',
       'setup.editgitignore': 'Edit .gitignore',
-      'disconnect.confirm': 'Disconnect from GitHub? Repository and profile settings are reset.',
+      'disconnect.confirm': 'Disconnect from GitHub? Repository and profile settings are reset and the token is deleted — GitHub will not show it to you a second time.',
       'settings.back': '← Back',
       'settings.title': 'Settings',
       'settings.sync.title': 'Synchronisation',
@@ -885,7 +899,10 @@
     }
   };
 
-  var lang = LANGS[0];
+  // Seeded before the first applyStatic(): boot() resolves the instance
+  // language a round-trip later, and until then an English user would be
+  // looking at a fully German panel.
+  var lang = detectLang();
 
   function t(key, vars) {
     var dict = I18N[lang] || I18N[LANGS[0]];
@@ -1004,6 +1021,10 @@
     el('gear').classList.toggle('hidden', step !== 0);
     el('userchip').classList.toggle('hidden', !login);
     if (login) { el('userchip').textContent = login; el('userchip').classList.add('ok'); }
+    el('step1connected').classList.toggle('hidden', !(step === 1 && login));
+    if (step === 1 && login) {
+      el('step1connectedtext').textContent = t('step1.connected', { login: login });
+    }
     [1, 2, 3].forEach(function (n) {
       var node = el('s' + n);
       node.classList.remove('active', 'done');
@@ -1082,6 +1103,13 @@
         o.value = o.textContent = name;
         mb.appendChild(o);
       });
+      // A repository without commits has no branches: set_repo() would
+      // coerce the empty value to "main" and the failure would only surface
+      // in couple() as a generic "a git command failed".
+      var empty = !branches.length;
+      el('step2empty').classList.toggle('hidden', !empty);
+      el('next2').disabled = empty;
+      if (empty) return;
       mb.value = branches.indexOf(opt.dataset.def) >= 0 ? opt.dataset.def : branches[0];
     }).catch(function (err) { showError('err2', err); });
   }
@@ -1101,7 +1129,18 @@
     }).then(boot).catch(function (err) { showError('err2', err); });
   });
   el('back2').addEventListener('click', function () {
-    api('DELETE', 'api/setup/token').then(boot);
+    // Navigation, not a reset: the stored token cannot be read again on
+    // GitHub, so throwing it away here would cost the user a new one.
+    show(1, el('userchip').textContent || null);
+  });
+  el('next1').addEventListener('click', function () {
+    show(2, el('userchip').textContent || null);
+    if (!el('repo').options.length) loadRepos();
+  });
+  el('step1disconnect').addEventListener('click', function () {
+    if (window.confirm(t('disconnect.confirm'))) {
+      api('DELETE', 'api/setup/token').then(boot);
+    }
   });
 
   // ---- Schritt 3
@@ -1136,13 +1175,6 @@
       desc.textContent = t('profile.' + key + '.desc');
       card.appendChild(name);
       card.appendChild(desc);
-      if (key === state.recommended) {
-        var rec = document.createElement('span');
-        rec.className = 'chip ok';
-        rec.style.alignSelf = 'flex-start';
-        rec.textContent = t('profile.recommended');
-        card.appendChild(rec);
-      }
       card.addEventListener('click', function () {
         state.profile = key;
         if (PRESETS[key]) {
@@ -1564,6 +1596,13 @@
       el('restartmeta').textContent = t('restart.meta.unavailable');
       restart.disabled = false;
     }
+    el('dismissrestart').onclick = function () {
+      el('dismissrestart').disabled = true;
+      api('POST', 'api/sync/restart-dismiss')
+        .then(loadSync)
+        .catch(function (err) { showError('dasherr', err); })
+        .finally(function () { el('dismissrestart').disabled = false; });
+    };
     el('recheckbtn').onclick = function () {
       el('recheckbtn').disabled = true;
       api('POST', 'api/sync/check')

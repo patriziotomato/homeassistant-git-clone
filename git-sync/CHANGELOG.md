@@ -20,6 +20,21 @@
   nothing at all, while suggesting that dashboards and UI-created automations
   were being backed up. The group is gone until there is an export that really
   does that.
+- Fix: "Back" in the setup wizard is navigation again. It used to delete the
+  GitHub connection — token, repository and profile — without asking, and
+  since GitHub never shows a token a second time, correcting a repository
+  choice cost you a brand new token. Step one now shows that the connection
+  is still there and offers the way forward; disconnecting has its own
+  clearly labelled button that says what it removes.
+- Fix: picking a repository that has no commits yet is no longer a dead end
+  with an unhelpful "a git command failed" much later. The wizard says what
+  is missing and how to fix it, and blocks the step until you do.
+- Fix: on an English instance the panel no longer appears in German for a
+  moment while it loads.
+- Fix: the "restart pending" banner can now be dismissed. Until now only a
+  restart started from the panel cleared it — restarting from Developer
+  Tools, the Supervisor or the power switch left it standing for good,
+  asking you to do what you had just done.
 
 ## 0.9.0
 
