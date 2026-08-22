@@ -100,7 +100,7 @@ for name in re.findall(r"var PROFILES = \[([^\]]*)\]", PANEL)[0].split(","):
 for name in re.findall(r"\{ key: '(\w+)'", PANEL):
     used.add("group." + name + ".name")
     used.add("group." + name + ".files")
-used |= {"group.apps.lockfile", "group.apps.full", "group.experimental"}
+used |= {"group.apps.lockfile", "group.apps.full"}
 
 check("panel: dynamic key families collected", len(used) > 120, str(len(used)))
 missing = sorted(k for k in used if k not in js_de or k not in js_en)

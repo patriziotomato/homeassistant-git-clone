@@ -23,7 +23,7 @@ REPO = {
 }
 PROFILE_OA = {"name": "ohne_anwendungen",
               "groups": {"core": True, "blueprints": True, "esphome": True,
-                         "themes_www": True, "apps": True, "ui_export": False},
+                         "themes_www": True, "apps": True},
               "apps_mode": "lockfile"}
 PROFILE_OWN = {"name": "eigene_gitignore", "groups": {}, "apps_mode": None}
 

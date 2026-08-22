@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.10.0
+## 1.0.0
 
 - The built-in safety exclusions are now re-established every time the app
   starts and before every commit. Until now they were written once, when the
@@ -15,6 +15,11 @@
   (rollback journal, shared-memory and write-ahead files) and manual copies
   such as `.db.bak` were previously able to slip into the repository. They are
   now excluded in every profile.
+- The sync profiles no longer offer the file group "UI-managed settings". It
+  was marked experimental but had nothing behind it: ticking it versioned
+  nothing at all, while suggesting that dashboards and UI-created automations
+  were being backed up. The group is gone until there is an export that really
+  does that.
 
 ## 0.9.0
 

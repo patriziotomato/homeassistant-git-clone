@@ -41,7 +41,6 @@
   .chip.ok { background: #e8f5e9; color: #2e7d32; }
   .chip.warn { background: #fff3e0; color: #ef6c00; }
   .chip.err { background: #fbe9e7; color: #c62828; }
-  .chip.exp { background: #f3e5f5; color: #6a1b9a; font-size: 10px; letter-spacing: 0.4px; }
   .mono { font-family: 'Roboto Mono', ui-monospace, monospace; }
   .meta { font-size: 13px; color: #727272; line-height: 1.5; }
   .label { font-size: 13px; font-weight: 500; color: #727272; }
@@ -592,7 +591,6 @@
       'profile.nur_kern.desc': 'Nur die zentralen YAML-Dateien.',
       'profile.benutzerdefiniert.name': 'Benutzerdefiniert',
       'profile.benutzerdefiniert.desc': 'Dateigruppen frei zusammenstellen.',
-      'group.experimental': 'EXPERIMENTELL',
       'group.core.name': 'Kern-Konfiguration',
       'group.core.files': 'configuration.yaml · automations.yaml · scripts.yaml · scenes.yaml',
       'group.blueprints.name': 'Blueprints & Dashboards (YAML)',
@@ -605,8 +603,6 @@
       'group.apps.files': 'custom_components/',
       'group.apps.lockfile': 'Nur Lockfile',
       'group.apps.full': 'Vollständig',
-      'group.ui_export.name': 'UI-verwaltete Einstellungen',
-      'group.ui_export.files': 'Bereinigter Export ausgewählter .storage-Inhalte',
       'couple.heading': 'Konfiguration koppeln',
       'couple.now': 'Jetzt koppeln',
       'couple.force': 'Remote umstellen & koppeln',
@@ -762,7 +758,6 @@
       'profile.nur_kern.desc': 'Just the central YAML files.',
       'profile.benutzerdefiniert.name': 'Custom',
       'profile.benutzerdefiniert.desc': 'Pick the file groups yourself.',
-      'group.experimental': 'EXPERIMENTAL',
       'group.core.name': 'Core configuration',
       'group.core.files': 'configuration.yaml · automations.yaml · scripts.yaml · scenes.yaml',
       'group.blueprints.name': 'Blueprints & dashboards (YAML)',
@@ -775,8 +770,6 @@
       'group.apps.files': 'custom_components/',
       'group.apps.lockfile': 'Lockfile only',
       'group.apps.full': 'Complete',
-      'group.ui_export.name': 'UI-managed settings',
-      'group.ui_export.files': 'Sanitised export of selected .storage contents',
       'couple.heading': 'Couple the configuration',
       'couple.now': 'Couple now',
       'couple.force': 'Switch remote & couple',
@@ -963,14 +956,13 @@
     { key: 'blueprints' },
     { key: 'esphome' },
     { key: 'themes_www' },
-    { key: 'apps', seg: true },
-    { key: 'ui_export', exp: true }
+    { key: 'apps', seg: true }
   ];
   var PROFILES = ['eigene_gitignore', 'komplett', 'ohne_anwendungen', 'nur_kern', 'benutzerdefiniert'];
   var PRESETS = {
-    komplett: { groups: { core: true, blueprints: true, esphome: true, themes_www: true, apps: true, ui_export: false }, apps_mode: 'full' },
-    ohne_anwendungen: { groups: { core: true, blueprints: true, esphome: true, themes_www: true, apps: true, ui_export: false }, apps_mode: 'lockfile' },
-    nur_kern: { groups: { core: true, blueprints: false, esphome: false, themes_www: false, apps: false, ui_export: false }, apps_mode: 'lockfile' },
+    komplett: { groups: { core: true, blueprints: true, esphome: true, themes_www: true, apps: true }, apps_mode: 'full' },
+    ohne_anwendungen: { groups: { core: true, blueprints: true, esphome: true, themes_www: true, apps: true }, apps_mode: 'lockfile' },
+    nur_kern: { groups: { core: true, blueprints: false, esphome: false, themes_www: false, apps: false }, apps_mode: 'lockfile' },
     eigene_gitignore: { groups: {}, apps_mode: null }
   };
 
@@ -1192,13 +1184,6 @@
       var name = document.createElement('div');
       name.className = 'gname';
       name.textContent = t('group.' + group.key + '.name');
-      if (group.exp) {
-        var chip = document.createElement('span');
-        chip.className = 'chip exp';
-        chip.textContent = t('group.experimental');
-        chip.style.marginLeft = '8px';
-        name.appendChild(chip);
-      }
       var files = document.createElement('div');
       files.className = 'gfiles mono';
       files.textContent = t('group.' + group.key + '.files');

@@ -50,21 +50,21 @@ app = FastAPI(title="Git Sync", docs_url=None, redoc_url=None, lifespan=lifespan
 
 # Sync profiles: which file groups end up in git. "apps_mode" is the
 # custom_components/ handling — "lockfile" records names & versions only.
-GROUP_KEYS = ["core", "blueprints", "esphome", "themes_www", "apps", "ui_export"]
+GROUP_KEYS = ["core", "blueprints", "esphome", "themes_www", "apps"]
 PROFILES = {
     "komplett": {
         "groups": {"core": True, "blueprints": True, "esphome": True,
-                   "themes_www": True, "apps": True, "ui_export": False},
+                   "themes_www": True, "apps": True},
         "apps_mode": "full",
     },
     "ohne_anwendungen": {
         "groups": {"core": True, "blueprints": True, "esphome": True,
-                   "themes_www": True, "apps": True, "ui_export": False},
+                   "themes_www": True, "apps": True},
         "apps_mode": "lockfile",
     },
     "nur_kern": {
         "groups": {"core": True, "blueprints": False, "esphome": False,
-                   "themes_www": False, "apps": False, "ui_export": False},
+                   "themes_www": False, "apps": False},
         "apps_mode": "lockfile",
     },
     # The user's own .gitignore governs the sync scope; only the built-in
