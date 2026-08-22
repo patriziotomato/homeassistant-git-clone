@@ -32,6 +32,17 @@ files and asks you to confirm. Nothing changes on main until you merge that
 pull request either way. A repository created from the wizard starts with a
 `README.md`, so this is the one file you will normally see there.
 
+## How often it checks
+
+Git Sync checks GitHub for new commits on an **idle interval** — every five
+minutes by default, adjustable in the settings. Around the moments that
+matter it is much faster: after you merge the sync PR from the panel, after
+*Apply now*, and after anything has just been taken over, it checks every ten
+seconds for a few minutes and then falls back to the idle interval.
+
+A merge you perform on GitHub itself is noticed on the next idle check, so
+raising the frequency there is what the setting is for.
+
 ## Applying changes
 
 After changes from main have been applied, the panel offers **Reload**

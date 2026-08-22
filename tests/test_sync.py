@@ -120,6 +120,28 @@ check("a changed state is a change",
       sync._changes_signature(edit("a.yaml", state="M"))
       != sync._changes_signature(edit("a.yaml", state="??")))
 
+# --- adaptive polling: fast while something is happening, idle otherwise
+NOW = 2_000_000.0
+IDLE = {"poll_interval": 300}
+sync._fast_until = 0.0
+check("idle uses the user's interval", sync.poll_interval(IDLE, NOW) == 300)
+check("the floor still applies", sync.poll_interval({"poll_interval": 5}, NOW) == 15)
+
+sync.begin_fast_poll(NOW)
+check("fast right after activity", sync.poll_interval(IDLE, NOW) == 10)
+check("still fast just before the window closes",
+      sync.poll_interval(IDLE, NOW + sync.FAST_POLL_WINDOW - 1) == 10)
+check("idle again once the window closes",
+      sync.poll_interval(IDLE, NOW + sync.FAST_POLL_WINDOW) == 300)
+check("a low idle setting is never slower than the fast phase",
+      sync.poll_interval({"poll_interval": 15}, NOW) == 10)
+sync._fast_until = 0.0
+
+# The whole point: fewer calls per day when nothing happens.
+before = 24 * 3600 / 60      # the old 60 s default
+after = 24 * 3600 / sync.DEFAULT_SETTINGS["poll_interval"]
+check("idle instances poll less than before", after < before, f"{after} vs {before}")
+
 print()
 print("FAILED: " + (", ".join(FAILED) if FAILED else "none"))
 sys.exit(1 if FAILED else 0)
