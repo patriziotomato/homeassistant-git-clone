@@ -103,6 +103,10 @@
   Assistant's add-on backups. That has always been the case — it is what
   makes a restore work — but the previous wording read as if the token never
   left the instance at all.
+- Installing and updating no longer builds the container on your own device.
+  Git Sync now ships pre-built images for aarch64 and amd64: adding the
+  repository URL installs in seconds instead of minutes, and an update is a
+  layer pull rather than another build on a Raspberry Pi.
 
 ## 0.9.0
 
