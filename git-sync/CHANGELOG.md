@@ -65,6 +65,17 @@
   If you keep editing without a break, a commit is still made after four
   times the configured period, so nothing piles up uncommitted — that would
   also hold up changes coming in from main.
+- After changes from main have landed, the panel now offers **Reload** as
+  well as a restart. Most of what people edit — automations, scripts,
+  scenes, template entities — is reloadable, and a reload takes seconds
+  where a full restart takes the whole house offline for a minute or more.
+- The reload is honest about its limits: it never reports the change as
+  fully applied. The banner stays and says what only a restart activates —
+  the `homeassistant:` block, integration setup, `custom_components/`. Both
+  actions stay manual and locked while the configuration check reports an
+  error.
+- Fix: a failed restart used to show the raw code "restart_failed" instead
+  of a sentence.
 
 ## 0.9.0
 

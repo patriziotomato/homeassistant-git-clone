@@ -305,6 +305,24 @@ def restart_core() -> dict:
     return {"ok": True}
 
 
+def reload_core() -> dict:
+    """Reload the reloadable YAML without restarting Home Assistant.
+
+    restart_pending is deliberately NOT cleared: reload does not cover the
+    homeassistant: block, integration setup, custom_components/ or anything
+    evaluated only at startup. Presenting a reload as "everything applied"
+    would leave a half-applied configuration with no signal that something is
+    missing — worse than asking for a restart too often. The banner stays,
+    says what a reload does not cover, and keeps offering the restart.
+    """
+    if not ha.core_reload():
+        return {"ok": False}
+    core = store.load().get("core", {})
+    core["reloaded_at"] = int(time.time())
+    store.update(core=core)
+    return {"ok": True, "core": core}
+
+
 def dismiss_restart() -> dict:
     """Clear the pending-restart flag without restarting.
 

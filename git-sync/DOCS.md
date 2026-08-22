@@ -20,6 +20,16 @@ Couples your Home Assistant configuration to a GitHub repository.
   you straight there.
 - `secrets.yaml`, `.storage/`, databases and logs are **never** transferred.
 
+## Applying changes
+
+After changes from main have been applied, the panel offers **Reload**
+(`homeassistant.reload_all`) next to a full restart. A reload covers the YAML
+that Home Assistant can reload at runtime — automations, scripts, scenes,
+template entities. Changes to the `homeassistant:` block, to integration
+setup or to `custom_components/` are only picked up by a restart, so the
+reminder stays until you restart or dismiss it. Neither action ever happens
+automatically.
+
 ## Repository settings on GitHub
 
 Leave GitHub's repository setting **Settings → General → "Automatically

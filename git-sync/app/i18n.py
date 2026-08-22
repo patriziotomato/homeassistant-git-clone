@@ -37,8 +37,9 @@ TEXTS = {
         "notify.restart.title": "Git Sync: Neustart empfohlen",
         "notify.restart.body": (
             "Änderungen aus main wurden übernommen und die Konfigurationsprüfung "
-            "war erfolgreich. Starte Home Assistant über das Git-Sync-Panel neu, "
-            "um sie zu aktivieren."
+            "war erfolgreich. Im Git-Sync-Panel kannst du die Konfiguration neu "
+            "laden — oder Home Assistant neu starten, wenn die Änderung erst "
+            "beim Start greift."
         ),
         "notify.check_failed.title": "Git Sync: Konfigurationsprüfung fehlgeschlagen",
         "notify.check_failed.body": (
@@ -72,8 +73,8 @@ TEXTS = {
         "notify.restart.title": "Git Sync: restart recommended",
         "notify.restart.body": (
             "Changes from main have been applied and the configuration check "
-            "succeeded. Restart Home Assistant from the Git Sync panel to "
-            "activate them."
+            "succeeded. Reload the configuration from the Git Sync panel — or "
+            "restart Home Assistant if the change only takes effect at startup."
         ),
         "notify.check_failed.title": "Git Sync: configuration check failed",
         "notify.check_failed.body": (
