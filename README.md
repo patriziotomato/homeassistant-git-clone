@@ -52,8 +52,9 @@ automatic commit messages.
 
 ## Status
 
-The app works end to end: milestones 1–4 are implemented and in use. What is
-still missing is publication, so read the last two points before installing.
+The app works end to end: milestones 1–4 are implemented and in use, and
+releases are published with pre-built images. Read the two caveats below
+before installing.
 
 - [x] Milestone 1 — app skeleton: ingress panel with a read-only git status
       view of the configuration directory
@@ -63,21 +64,17 @@ still missing is publication, so read the last two points before installing.
 - [x] Milestone 3 — sync profiles (file groups, application lockfile mode)
 - [x] Milestone 4 — the sync-PR workflow: auto-commit, accumulating PR,
       manual merge from the panel, conflict deep links
-- [ ] Publishing: pre-built multi-arch images, public app repository
-      ([#14](https://github.com/patriziotomato/homeassistant-git-clone/issues/14)) — the release workflow exists, the published images
-      do not yet
+- [x] Publishing: pre-built multi-arch images for aarch64 and amd64, pushed to
+      ghcr.io on every version tag
+      ([#14](https://github.com/patriziotomato/homeassistant-git-clone/issues/14))
 
 Concretely, before calling this ready for general use:
 
-- **No pre-built images yet.** Every installation still builds the container
-  on the device, which takes several minutes on a Raspberry Pi. Until the
-  first tag is published, "Installing → As a local app" below is the only
-  path that works.
 - **Automated coverage stops at the engine.** The git engine, the
   dictionaries, the quiet-period timer and the state file are tested; the
   FastAPI endpoints, the panel and the GitHub client are checked by hand.
-- Ticking milestones 2–4 says the mechanisms are built and work, not that the
-  app has seen wide use. It has not.
+- Ticking the milestones above says the mechanisms are built and work, not
+  that the app has seen wide use. It has not.
 
 ## Distribution
 
@@ -105,12 +102,12 @@ rather than in a rewrite of this one.
 
 ## Installing
 
-Two paths. Which one applies depends on whether the version you want has
-published images.
+Two paths: the app repository for released versions, a local copy for
+development or for an unreleased state.
 
 ### From the app repository
 
-For released versions, once their images are on ghcr.io:
+The normal path for released versions:
 
 1. In Home Assistant open **Settings → Apps → App store**, choose
    **⋮ → Repositories**.
