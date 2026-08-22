@@ -17,7 +17,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v7
 
-      # All three suites need only git and the standard library — no install step.
+      # Every suite needs only git and the standard library — no install step.
       - name: Git engine against a local bare repo
         run: python3 tests/test_git_ops.py
 
@@ -26,3 +26,6 @@ jobs:
 
       - name: Auto-commit quiet period
         run: python3 tests/test_sync.py
+
+      - name: Persisted state
+        run: python3 tests/test_store.py

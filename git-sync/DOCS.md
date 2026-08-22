@@ -118,8 +118,14 @@ whether the repository already exists:
 time to time.)
 
 The token is validated against the GitHub API and stored only in the app's
-private `/data` volume on your instance. It is never written to the
-repository and never returned by the app's API.
+private `/data` volume on your instance, with owner-only permissions. It is
+never written to the repository, never placed in `.git/config`, and never
+returned by the app's API.
+
+One consequence worth knowing: `/data` is part of Home Assistant's add-on
+backups, so the token is inside every backup that includes this app —
+including backups you upload to cloud storage. That is what makes a restore
+work, but treat those backups accordingly.
 
 ## Configuration
 
