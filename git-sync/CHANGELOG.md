@@ -82,6 +82,14 @@
   the README of a repository the wizard had just created one screen earlier.
   Git Sync now stops before coupling, lists what would be removed and asks
   you to confirm. As before, nothing changes on main until you merge.
+- Checking for new commits is now adaptive. Around the moments that matter —
+  after you merge the sync PR from the panel, after "Apply now", and right
+  after something has been taken over — Git Sync checks every ten seconds for
+  a few minutes, so what you just did shows up almost immediately. The rest of
+  the time it idles at five minutes instead of every minute, which is a
+  fraction of the previous requests to GitHub for a completely idle instance.
+  The interval in the settings is that idle cadence; if you had set it
+  yourself, your choice is untouched.
 
 ## 0.9.0
 

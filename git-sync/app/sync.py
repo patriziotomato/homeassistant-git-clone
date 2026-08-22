@@ -20,7 +20,10 @@ DEFAULT_SETTINGS = {
     "auto_pull": True,
     "auto_commit": True,
     "auto_commit_delay": 120,  # seconds of quiet before auto-committing
-    "poll_interval": 60,
+    # The *idle* cadence. Almost every tick used to return nothing — roughly
+    # 1,400 fetches a day at the old 60 s default — so idling is slower now and
+    # the fast phase below covers the moments that actually matter.
+    "poll_interval": 300,
     # Empty values follow the UI language: "" means "not picked yet" for the
     # language, and "use this language's default" for the commit template.
     "language": "",
@@ -34,6 +37,29 @@ DEFAULT_SETTINGS = {
 NOTIFY_CONFLICT_ID = "git_sync_conflict"
 NOTIFY_PR_ID = "git_sync_pr_waiting"
 NOTIFY_RESTART_ID = "git_sync_restart"
+
+# Adaptive polling: after something happens, watch closely for a while, then
+# fall back to the user's idle interval.
+FAST_POLL_INTERVAL = 10    # seconds between polls during the fast phase
+FAST_POLL_WINDOW = 180     # how long the fast phase lasts
+MIN_POLL_INTERVAL = 15     # floor for the user's idle setting
+
+_fast_until: float = 0.0
+
+
+def begin_fast_poll(now: float | None = None) -> None:
+    """Something just happened — poll closely for the next few minutes."""
+    global _fast_until
+    _fast_until = (time.time() if now is None else now) + FAST_POLL_WINDOW
+
+
+def poll_interval(settings: dict, now: float | None = None) -> int:
+    """Seconds until the next poll: the fast phase while something is going
+    on, the user's idle interval otherwise."""
+    now = time.time() if now is None else now
+    if now < _fast_until:
+        return FAST_POLL_INTERVAL
+    return max(MIN_POLL_INTERVAL, int(settings["poll_interval"]))
 
 # A commit is forced after this multiple of the delay even while edits keep
 # arriving: without it, continuous editing would never commit at all — and an
@@ -345,6 +371,7 @@ def pull_now() -> dict:
         commit_now(None)  # commit-first keeps merges clean
     before = git_ops.tree_hash()
     result = git_ops.integrate(token, repo)
+    begin_fast_poll()  # the user is syncing right now — stay close for a while
     if result == "ok":
         store.update(last_pull=int(time.time()))
         # Tree comparison, not head: history-only updates (skipped empty
@@ -371,6 +398,7 @@ def merge_now(message: str | None = None) -> dict:
     if not outcome.get("merged"):
         return {"merged": False, "error": "merge_failed", "pr": detail}
     gh.delete_branch(token, repo["full_name"], repo["sync_branch"])
+    begin_fast_poll()  # the moment the user is watching
     tree_before = git_ops.tree_hash()
     git_ops.realign_after_merge(token, repo)
     store.update(last_pull=int(time.time()), notify_state={"conflict": False, "pr_reminded": None})
@@ -454,6 +482,9 @@ async def poller():
                         before = git_ops.tree_hash()
                         result = await asyncio.to_thread(git_ops.integrate, token, repo)
                         if result == "ok":
+                            # Activity begets activity: having just taken
+                            # something over, look again soon.
+                            begin_fast_poll()
                             store.update(last_pull=int(time.time()))
                             if git_ops.tree_hash() != before:
                                 await asyncio.to_thread(_after_apply, settings)
@@ -474,8 +505,8 @@ async def poller():
                                         err.kind, err.detail or "-")
                     if has_outgoing or reminded:
                         await asyncio.to_thread(_check_pr_reminder, token, repo, settings)
-            interval = settings["poll_interval"] if configured() else 30
+            interval = poll_interval(settings) if configured() else 30
         except Exception:  # never let the loop die
             LOG.exception("poller iteration failed")
             interval = 60
-        await asyncio.sleep(max(15, interval))
+        await asyncio.sleep(interval)
