@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.3
+
+- The merge dialog no longer forces its suggested commit text on you: a small
+  × inside the field clears it in one tap, and an empty field simply leaves the
+  merge commit text to GitHub — the field now says so instead of looking like
+  something you have to fill in.
+- Opening that dialog now replaces the "Merge PR …" button instead of adding a
+  second merge button underneath it — while you are deciding, only one button
+  on screen merges anything.
+
 ## 1.0.2
 
 - Maintenance release: the web framework the app is built on has been brought
