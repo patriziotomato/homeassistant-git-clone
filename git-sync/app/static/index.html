@@ -501,7 +501,7 @@
               <div style="font-size:15px;font-weight:500" id="prtitle"></div>
               <div id="prcommits" style="display:flex;flex-direction:column;gap:8px"></div>
               <div class="hint" data-i18n="pr.hint"></div>
-              <div class="row actions">
+              <div class="row actions" id="practions">
                 <button class="btn" id="mergebtn" data-i18n="pr.merge"></button>
                 <a id="prlink" href="#" target="_blank" rel="noopener"><button class="btn text" data-i18n="pr.view"></button></a>
               </div>
@@ -1623,7 +1623,18 @@
           .finally(function () { el('createprbtn').disabled = false; });
       };
     }
-    if (!pr) return;
+    var mergebox = el('mergebox');
+    var practions = el('practions');
+    // The box replaces the row it came from: two merge buttons on screen at
+    // once ("PR mergen …" and "Jetzt mergen") read as a choice, not a step.
+    function openMerge(open) {
+      mergebox.classList.toggle('hidden', !open);
+      practions.classList.toggle('hidden', open);
+    }
+    if (!pr) {
+      openMerge(false);  // the PR can vanish while the box is open
+      return;
+    }
     var conflict = pr.mergeable === false;
     chip.className = 'chip ' + (conflict ? 'err' : (pr.mergeable ? 'ok' : ''));
     chip.textContent = conflict ? t('pr.chip.conflict')
@@ -1639,9 +1650,8 @@
     banner.classList.toggle('hidden', !conflict);
     if (conflict) el('conflictlink').href = pr.url;
     var mergebtn = el('mergebtn');
-    var mergebox = el('mergebox');
     mergebtn.disabled = conflict;
-    if (conflict) mergebox.classList.add('hidden');
+    if (conflict) openMerge(false);
     var mergemsg = el('mergemsg');
     var mergeclear = el('mergemsgclear');
     // The suggestion is an offer, not a default: one tap empties the field,
@@ -1654,22 +1664,20 @@
       mergemsg.focus();
     };
     mergebtn.onclick = function () {
-      // Opening prefills the suggestion; while open, re-clicking (or a
-      // background refresh) must not clobber what the user typed.
-      if (mergebox.classList.contains('hidden')) {
-        el('mergequestion').textContent = t('pr.merge.confirm', { number: pr.number, branch: s.repo.main_branch });
-        mergemsg.value = s.merge_suggested_message || '';
-        syncMergeClear();
-        mergebox.classList.remove('hidden');
-      }
+      // Only opening prefills the suggestion — a background refresh re-renders
+      // the card and must not clobber what the user typed.
+      el('mergequestion').textContent = t('pr.merge.confirm', { number: pr.number, branch: s.repo.main_branch });
+      mergemsg.value = s.merge_suggested_message || '';
+      syncMergeClear();
+      openMerge(true);
       mergemsg.focus();
     };
-    el('mergecancel').onclick = function () { mergebox.classList.add('hidden'); };
+    el('mergecancel').onclick = function () { openMerge(false); };
     el('mergeconfirm').onclick = function () {
       el('mergeconfirm').disabled = true;
       api('POST', 'api/sync/merge', { message: mergemsg.value })
         .then(function () {
-          mergebox.classList.add('hidden');
+          openMerge(false);
           loadSync();
         })
         .catch(function (err) { showError('dasherr', err); })
