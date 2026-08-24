@@ -142,6 +142,61 @@ before = 24 * 3600 / 60      # the old 60 s default
 after = 24 * 3600 / sync.DEFAULT_SETTINGS["poll_interval"]
 check("idle instances poll less than before", after < before, f"{after} vs {before}")
 
+# --- the manual look at main looks, and only looks
+REPO = {"full_name": "jane-doe/ha-config", "main_branch": "main", "sync_branch": "ha-sync"}
+
+
+class FakeGit:
+    """git_ops with exactly the three read-only calls the check may make.
+
+    Everything else — commit_and_push, integrate, push — raises: a button that
+    only asks "is there anything new?" must never change the working tree, the
+    sync branch or the remote.
+    """
+
+    def __init__(self, count):
+        self.count = count
+        self.calls = []
+
+    def fetch(self, token, repo_cfg):
+        self.calls.append("fetch")
+
+    def incoming_count(self, repo_cfg):
+        return self.count
+
+    def incoming_commits(self, repo_cfg, limit=5):
+        return [{"hash": "c%d" % n, "subject": "s", "when": "now"} for n in range(self.count)]
+
+    def __getattr__(self, name):
+        raise AssertionError("the check touched git_ops." + name)
+
+
+def run_check(count):
+    """check_incoming() against the fake; reports the poll cadence and the
+    "last looked" clock it left behind (read before the globals go back)."""
+    real_git, real_ctx = sync.git_ops, sync._ctx
+    git = FakeGit(count)
+    sync.git_ops = git
+    sync._ctx = lambda: ("token", REPO, {"name": "nur_kern"}, sync.DEFAULT_SETTINGS)
+    sync._fast_until = sync._last_checked = 0.0
+    try:
+        return sync.check_incoming(), git, sync._fast_until, sync._last_checked
+    finally:
+        sync.git_ops, sync._ctx = real_git, real_ctx
+        sync._fast_until = sync._last_checked = 0.0
+
+
+result, git, fast_until, checked_at = run_check(0)
+check("the check fetches", git.calls == ["fetch"], str(git.calls))
+check("nothing new is reported as nothing new", result["incoming_count"] == 0, str(result))
+check("the check records when it looked", checked_at > 0.0, str(checked_at))
+check("nothing new leaves the poll cadence alone", fast_until == 0.0, str(fast_until))
+
+result, git, fast_until, checked_at = run_check(3)
+check("waiting commits are reported", result["incoming_count"] == 3
+      and len(result["incoming"]) == 3, str(result))
+check("something new starts the fast phase", fast_until > 0.0, str(fast_until))
+
 print()
 print("FAILED: " + (", ".join(FAILED) if FAILED else "none"))
 sys.exit(1 if FAILED else 0)

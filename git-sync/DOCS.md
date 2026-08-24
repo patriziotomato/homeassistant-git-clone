@@ -40,8 +40,15 @@ matter it is much faster: after you merge the sync PR from the panel, after
 *Apply now*, and after anything has just been taken over, it checks every ten
 seconds for a few minutes and then falls back to the idle interval.
 
-A merge you perform on GitHub itself is noticed on the next idle check, so
-raising the frequency there is what the setting is for.
+A merge you perform on GitHub itself is noticed on the next idle check. If you
+do not want to wait for it, **Check for changes** in the *Incoming from main*
+card looks at the main branch immediately; the card records when it last
+looked. That check only looks — it never applies anything, so taking the
+commits over stays *Apply now* (or automatic pulling).
+
+Note that background checking belongs to automatic pulling: with **Apply
+changes from main automatically** switched off, nothing looks at main on its
+own and *Check for changes* is how the card learns about new commits.
 
 ## Applying changes
 
