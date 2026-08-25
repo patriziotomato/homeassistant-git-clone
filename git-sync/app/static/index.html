@@ -531,9 +531,11 @@
             </div>
             <div id="incoming" class="empty" data-i18n="incoming.empty.plain"></div>
             <div id="pullblocked" class="hint hidden"></div>
-            <div class="row actions hidden" id="pullrow">
+            <div class="meta hidden" id="checkedmeta"></div>
+            <div class="row actions">
               <span class="grow"></span>
-              <button class="btn" id="pullbtn" data-i18n="incoming.pull"></button>
+              <button class="btn text" id="checkbtn" data-i18n="incoming.check"></button>
+              <button class="btn hidden" id="pullbtn" data-i18n="incoming.pull"></button>
             </div>
             <div id="appliedbox" class="hidden" style="display:flex;flex-direction:column;gap:10px">
               <div class="divider"></div>
@@ -814,6 +816,9 @@
       'incoming.empty.plain': 'Auf Stand mit main.',
       'incoming.count': '{count} Commit(s)',
       'incoming.pull': 'Jetzt übernehmen',
+      'incoming.check': 'Auf Änderungen prüfen',
+      'incoming.checked': 'Zuletzt geprüft: {time} Uhr',
+      'incoming.checked.none': 'Gerade geprüft — nichts Neues auf {branch}.',
       'incoming.blocked.auto': 'Wartet auf einen sauberen Stand: {count} Commit(s) aus main werden übernommen, sobald deine lokalen Änderungen committet sind — der Auto-Commit erledigt das gleich.',
       'incoming.blocked.manual': 'Wartet auf einen sauberen Stand: {count} Commit(s) aus main werden erst übernommen, wenn deine lokalen Änderungen committet sind. Auto-Commit ist aus — „Jetzt übernehmen“ macht beides in einem Schritt.',
       'incoming.applied.title': 'Zuletzt übernommen',
@@ -832,7 +837,7 @@
       'settings.poll.30': 'Alle 30 Sekunden',
       'settings.poll.60': 'Jede Minute',
       'settings.poll.300': 'Alle 5 Minuten',
-      'settings.poll.hint': 'Gilt für den Leerlauf. Nach einem Merge oder „Jetzt übernehmen“ prüft Git Sync ein paar Minuten lang alle 10 Sekunden.',
+      'settings.poll.hint': 'Gilt für den Leerlauf. Sobald etwas passiert — ein Merge, „Jetzt übernehmen“, neue Commits auf main — prüft Git Sync ein paar Minuten lang alle 10 Sekunden. „Auf Änderungen prüfen“ schaut jederzeit sofort nach.',
       'settings.autocommit': 'Lokale Änderungen automatisch committen',
       'settings.autocommit.hint': 'In den offenen Sync-PR, nach einer Ruhephase. Ausgeschaltet liegt das Committen — und damit auch die Übernahme aus main — bei dir',
       'settings.commitdelay': 'Ruhephase vor Auto-Commit',
@@ -1001,6 +1006,9 @@
       'incoming.empty.plain': 'Up to date with main.',
       'incoming.count': '{count} commit(s)',
       'incoming.pull': 'Apply now',
+      'incoming.check': 'Check for changes',
+      'incoming.checked': 'Last checked: {time}',
+      'incoming.checked.none': 'Just checked — nothing new on {branch}.',
       'incoming.blocked.auto': 'Waiting for a clean tree: {count} commit(s) from main will be applied as soon as your local changes are committed — auto-commit will do that shortly.',
       'incoming.blocked.manual': 'Waiting for a clean tree: {count} commit(s) from main will only be applied once your local changes are committed. Auto-commit is off — “Apply now” does both in one step.',
       'incoming.applied.title': 'Recently applied',
@@ -1019,7 +1027,7 @@
       'settings.poll.30': 'Every 30 seconds',
       'settings.poll.60': 'Every minute',
       'settings.poll.300': 'Every 5 minutes',
-      'settings.poll.hint': 'This is the idle cadence. After a merge or “Apply now”, Git Sync checks every 10 seconds for a few minutes.',
+      'settings.poll.hint': 'This is the idle cadence. Whenever something happens — a merge, “Apply now”, new commits on main — Git Sync checks every 10 seconds for a few minutes. “Check for changes” looks right away, at any time.',
       'settings.autocommit': 'Commit local changes automatically',
       'settings.autocommit.hint': 'Into the open sync PR, after a quiet period. Switched off, committing — and with it applying main — is up to you',
       'settings.commitdelay': 'Quiet period before auto-commit',
@@ -1439,7 +1447,7 @@
   });
 
   function loadSync() {
-    api('GET', 'api/sync').then(function (s) {
+    return api('GET', 'api/sync').then(function (s) {
       syncData = s;
       el('dasherr').classList.add('hidden');
       renderCoupling(s);
@@ -1690,7 +1698,35 @@
     var chipEl = el('incount');
     var list = el('incoming');
     chipEl.classList.toggle('hidden', count === 0);
-    el('pullrow').classList.toggle('hidden', count === 0);
+    el('pullbtn').classList.toggle('hidden', count === 0);
+    // What the card knows about main is only as fresh as the last look at it —
+    // and with auto-pull switched off nothing ever looks on its own. So the
+    // card says when it last looked, and offers that look itself. It keeps
+    // offering it while main is ahead: another commit can land meanwhile.
+    // Empty is hidden, not blank: the card is a flex column, so an empty line
+    // would still cost a gap.
+    function showChecked(text) {
+      el('checkedmeta').textContent = text;
+      el('checkedmeta').classList.toggle('hidden', !text);
+    }
+    showChecked(s.last_checked
+      ? t('incoming.checked', { time: timeLabel(s.last_checked) })
+      : '');
+    el('checkbtn').onclick = function () {
+      el('checkbtn').disabled = true;
+      api('POST', 'api/sync/fetch')
+        .then(function (result) {
+          return loadSync().then(function () {
+            // Nothing came in: the card looks exactly as it did before the
+            // tap, so it has to say that it did look.
+            if (!result.incoming_count) {
+              showChecked(t('incoming.checked.none', { branch: s.repo.main_branch }));
+            }
+          });
+        })
+        .catch(function (err) { showError('dasherr', err); })
+        .finally(function () { el('checkbtn').disabled = false; });
+    };
     renderApplied(s);
     // Auto-pull only integrates into a clean tree (integrate() raises on a
     // dirty one). With auto-commit off that pause is indefinite, and nothing

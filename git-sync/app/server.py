@@ -223,6 +223,22 @@ def sync_commit(payload: dict = Body(default={})) -> dict:
         raise _github_error(err) from err
 
 
+@app.post("/api/sync/fetch")
+def sync_fetch() -> dict:
+    """Look at main right now — the manual counterpart to the poller's check.
+
+    Fetch only: nothing is committed, merged or pushed. It is what makes the
+    incoming card trustworthy on an instance that has auto-pull switched off,
+    where nothing else ever moves the tracking ref.
+    """
+    if not sync.configured():
+        raise HTTPException(status_code=409, detail="not_configured")
+    try:
+        return sync.check_incoming()
+    except git_ops.GitError as err:
+        raise _git_error(err) from err
+
+
 @app.post("/api/sync/pull")
 def sync_pull() -> dict:
     try:

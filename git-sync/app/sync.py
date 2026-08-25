@@ -363,10 +363,46 @@ def dismiss_restart() -> dict:
     return {"ok": True}
 
 
+# When the remote was last looked at. In memory, like the other poller clocks:
+# "up to date with main" is only worth as much as the moment it was last
+# verified, and the panel says which moment that was — but a fetch happens on
+# every poll, and persisting it would mean writing /data every few seconds for
+# something that means nothing after a restart anyway.
+_last_checked: float = 0.0
+
+
+def _mark_checked() -> None:
+    """Every fetch goes through here."""
+    global _last_checked
+    _last_checked = time.time()
+
+
+def check_incoming() -> dict:
+    """Look at main right now — fetch only, nothing is applied.
+
+    The panel's "behind by N commits" comes from the local tracking ref, and
+    the only thing that moves it is the poller's fetch — which, with auto-pull
+    switched off, does not run at all. The card would then keep reporting "up
+    to date" no matter what landed on main. This is the manual trigger for that
+    look: it refreshes what the panel knows and leaves the working tree alone.
+    Taking the commits over stays a separate, deliberate step.
+    """
+    token, repo, _, _ = _ctx()
+    git_ops.fetch(token, repo)
+    _mark_checked()
+    count = git_ops.incoming_count(repo)
+    if count:
+        # Something is waiting: auto-pull should not sit on it for another
+        # idle interval.
+        begin_fast_poll()
+    return {"incoming_count": count, "incoming": git_ops.incoming_commits(repo)}
+
+
 def pull_now() -> dict:
     """Fetch and integrate origin/sync + origin/main into the local branch."""
     token, repo, _, settings = _ctx()
     git_ops.fetch(token, repo)
+    _mark_checked()
     if git_ops.local_changes():
         commit_now(None)  # commit-first keeps merges clean
     before = git_ops.tree_hash()
@@ -424,6 +460,7 @@ def full_status() -> dict:
         "repo": repo,
         "settings": settings,
         "last_pull": state.get("last_pull"),
+        "last_checked": int(_last_checked) if _last_checked else None,
     }
     if coupling == "remote_mismatch":
         result["current_remote"] = git_ops.remote_url()
@@ -476,6 +513,7 @@ async def poller():
                     await asyncio.to_thread(commit_now, None)
                 if settings["auto_pull"]:
                     await asyncio.to_thread(git_ops.fetch, token, repo)
+                    _mark_checked()
                     behind = git_ops.incoming_count(repo)
                     dirty = bool(await asyncio.to_thread(git_ops.local_changes))
                     if behind and not dirty:

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.0
+
+- The *Incoming from main* card can now be triggered by hand: **Check for
+  changes** looks at the main branch right away instead of waiting for the
+  next background check, and the card says when it last looked. The check only
+  looks — applying the commits stays *Apply now*, or automatic pulling.
+- This matters most with **Apply changes from main automatically** switched
+  off. Background checking belongs to automatic pulling, so with it off
+  nothing ever looked at main: the card reported "Up to date with main" no
+  matter what had landed there, and there was no way to find out other than
+  switching automatic pulling back on.
+
 ## 1.0.3
 
 - The merge dialog no longer forces its suggested commit text on you: a small
